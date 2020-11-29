@@ -33,9 +33,15 @@
 
   // Collapse Navbar
   var navbarCollapse = function() {
-    if ($("#mainNav").offset().top > 100) {
-      $("#mainNav").addClass("navbar-scrolled");
+    if ($("#mainNav").offset().top > 5) {
+      $("#mainFooter").addClass("footer-scrolled");
+      if ($("#mainNav").offset().top > 100) {
+        $("#mainNav").addClass("navbar-scrolled");
+      } else {
+        $("#mainNav").removeClass("navbar-scrolled");
+      }
     } else {
+      $("#mainFooter").removeClass("footer-scrolled");
       $("#mainNav").removeClass("navbar-scrolled");
     }
   };
