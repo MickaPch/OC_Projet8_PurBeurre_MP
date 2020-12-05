@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'home',
+    'user',
 ]
 
 MIDDLEWARE = [
@@ -84,6 +85,11 @@ DATABASES = {
     }
 }
 
+# User custom model
+AUTH_USER_MODEL = 'user.User'
+
+# Authentification backend
+AUTHENTICATION_BACKENDS = ['user.backends.AuthenticateBackend']
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -126,4 +132,13 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static/"),
     os.path.join(BASE_DIR, "home/static/home/"),
+    os.path.join(BASE_DIR, "user/static/user/"),
 ]
+
+# Email Backend
+# Development email
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Production email
+# # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_PORT = 1025
