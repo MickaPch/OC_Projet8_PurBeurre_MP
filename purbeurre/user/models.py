@@ -2,6 +2,8 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from .validators import UsernameValidator
+
 
 class UserManager(BaseUserManager):
     """
@@ -56,11 +58,26 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     """User model for Pur Beurre"""
 
+    # Change Username validator
+    username_validator = UsernameValidator()
+
+    username = models.CharField(
+        _('username'),
+        max_length=150,
+        unique=True,
+        help_text=_('Required. 150 characters or fewer. Letters and digits only.'),
+        validators=[username_validator],
+        error_messages={
+            'unique': _("A user with that username already exists."),
+        },
+    )
+    # Unique = True for email address
     email = models.EmailField(
         _('email address'),
         unique=True
     )
 
+    # Email at username field
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 

@@ -4,3 +4,25 @@ header.masthead {
     padding-top: 4.5rem;
     padding-bottom: 0;
 }
+
+.invalid-input {
+    color: #dc3545;
+    padding-left: calc(1.5em + 0.75rem);
+    background-image: url(../assets/img/cross.png);
+    background-repeat: no-repeat;
+    background-position: left calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.valid-input {
+    color: #28a745;
+    padding-left: calc(1.5em + 0.75rem);
+    background-image: url(../assets/img/tick.png);
+    background-repeat: no-repeat;
+    background-position: left calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.form-check-label {
+    font-size: 0.7rem;
+}
