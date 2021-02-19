@@ -5,6 +5,7 @@ from django.utils.safestring import mark_safe
 
 class ConnectionForm(forms.Form):
     """Connection form"""
+    prefix = "connect"
     user_login = forms.CharField(label="Email ou login")
     pwd = forms.CharField(label="Mot de passe", widget=forms.PasswordInput)
 

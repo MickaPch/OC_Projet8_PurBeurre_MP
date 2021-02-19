@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'home',
     'user',
+    'products',
 ]
 
 MIDDLEWARE = [
@@ -78,10 +79,21 @@ WSGI_APPLICATION = 'purbeurre.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'purbeurre',
+        'USER': 'postgres',
+        'PASSWORD': 'M!ckaPcht4',
+        'HOST': '127.0.0.1',
+        'PORT': '5432'
     }
 }
 
@@ -89,7 +101,9 @@ DATABASES = {
 AUTH_USER_MODEL = 'user.User'
 
 # Authentification backend
-AUTHENTICATION_BACKENDS = ['user.backends.AuthenticateBackend']
+AUTHENTICATION_BACKENDS = [
+    'user.backends.AuthenticateBackend',
+]
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -142,6 +156,7 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static/"),
     os.path.join(BASE_DIR, "home/static/home/"),
     os.path.join(BASE_DIR, "user/static/user/"),
+    os.path.join(BASE_DIR, "products/static/products/"),
 ]
 
 # Email Backend

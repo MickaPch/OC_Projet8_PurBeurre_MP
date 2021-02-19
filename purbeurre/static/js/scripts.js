@@ -31,12 +31,35 @@
     offset: 75
   });
 
+  $("#login_user").click(function() {
+    if ($("#collapseLogin").hasClass('show')) {
+      $("#collapseLogin").collapse('hide');
+    } else {
+      $("#collapseLogin").collapse('show');
+      $("#id_connect-user_login").focus();
+    }
+  });
+
+  $(".nav-link").hover(function() {
+    var nav_link_text = $(this).find('.nav-link-text');
+    nav_link_text.attr('hidden', false);
+  }, function() {
+    $('.nav-link-text').attr('hidden', true);
+  });
+
   // Collapse Navbar
   var navbarCollapse = function() {
     if ($("#mainNav").offset().top > 5) {
       $("#mainFooter").addClass("footer-scrolled");
       if ($("#mainNav").offset().top > 100) {
         $("#mainNav").addClass("navbar-scrolled");
+        // $("#login_user").click(function() {
+        //   if ( $("#mainNav").hasClass('py-3') ) {
+        //     $("#mainNav").removeClass('py-3').addClass('py-5');
+        //   } else {
+        //     $("#mainNav").removeClass('py-4').addClass('py-3');
+        //   }
+        // });
       } else {
         $("#mainNav").removeClass("navbar-scrolled");
       }

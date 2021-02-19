@@ -37,7 +37,7 @@ class UserManager(BaseUserManager):
 
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
-        extra_fields.setdefault('is_active', False)
+        extra_fields.setdefault('is_active', True) # Change to False if verification by mail
 
         return self._create_user(email, password, **extra_fields)
     

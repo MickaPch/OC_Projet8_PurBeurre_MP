@@ -1,22 +1,19 @@
-$("#id_email").keyup(function() {
+$("#id_email").change(function() {
     var email = $(this).val();
     var new_content = new String;
 
     if (email != "") {
         $.ajax({
-            url: "/user/check_email/",
+            url: "/user/email_verification/",
             type: "POST",
             data: {email: email}
         }).done(function(response) {
-            if (response == "email disponible") {
-                new_content += "<div class='valid-input'>Cet email est valable et disponible.</div>"
-                $("#id_email").addClass('is-valid').removeClass('is-invalid');
-            } else if (response == "email pris") {
-                new_content += "<div class='invalid-input'>Cet email est déjà utilisé par un autre utilisateur.</div>"
+            if (response == "email nok") {
+                new_content += "<div class='invalid-input'>Veuillez entrer une adresse mail conforme.</div>";
                 $("#id_email").addClass('is-invalid').removeClass('is-valid');
             } else {
-                new_content += "<div class='invalid-input'>Le format de l'email n'est pas valide.</div>"
-                $("#id_email").addClass('is-invalid').removeClass('is-valid');
+                new_content += "<div class='valid-input'>Le format de cet email est conforme.</div>";
+                $("#id_email").addClass('is-valid').removeClass('is-invalid');
             }
             $("#id_email").attr("data-content", new_content);
             var popover = $("#id_email").data('bs.popover');
@@ -29,15 +26,34 @@ $("#id_email").keyup(function() {
         $("#id_email").attr("data-content", new_content);
         var popover = $("#id_email").data('bs.popover');
         popover.setContent();
-        $(this).addClass('is-invalid').removeClass('is-valid');
+        $("#id_email").addClass('is-invalid').removeClass('is-valid');
     }
 }).focus(function() {
     $("#id_email").popover('show');
 }).blur(function() {
     $("#id_email").popover('hide');
+    var email = $("#id_email").val();
+    var new_content = new String;
+    $.ajax({
+        url: "/user/email_verification/",
+        type: "POST",
+        data: {email: email}
+    }).done(function(response) {
+        console.log(response)
+        if (response == "email nok") {
+            new_content += "<div class='invalid-input'>Veuillez entrer une adresse mail conforme.</div>";
+            $("#id_email").addClass('is-invalid').removeClass('is-valid');
+        } else {
+            new_content += "<div class='valid-input'>Le format de cet email est conforme.</div>";
+            $("#id_email").addClass('is-valid').removeClass('is-invalid');
+        }
+        $("#id_email").attr("data-content", new_content);
+    }).fail(function() {
+        console.log('failed');
+    });
 });
 
-$("#id_user_login").keyup(function() {
+$("#id_user_login").change(function() {
     var user_login = $(this).val();
     var new_content = new String;
 
@@ -190,6 +206,7 @@ $("#form_new").on('submit', function(event) {
 });
 
 function send_post(form) {
+    var new_content = new String;
     if (
         $("#id_email").hasClass('is-valid')
         && !($("#id_user_login").hasClass('is-invalid'))
@@ -205,6 +222,7 @@ function send_post(form) {
             success: function (data) {
                 if (data.ok) {
                     alert('Le compte a bien été créé')
+                    window.location.replace(data.url);
                 } else {
                     alert('Erreur')
                 }
@@ -212,6 +230,22 @@ function send_post(form) {
             error: function(xhr, errmsg, err) {
                 console.log(errmsg);
             }
+        }).done(function(response) {
+            if (response == "email disponible") {
+                new_content += "<div class='valid-input'>Cet email est valable et disponible.</div>"
+                $("#id_email").addClass('is-valid').removeClass('is-invalid');
+            } else if (response == "email pris") {
+                new_content += "<div class='invalid-input'>Cet email est déjà utilisé par un autre utilisateur.</div>"
+                $("#id_email").addClass('is-invalid').removeClass('is-valid');
+            } else {
+                new_content += "<div class='invalid-input'>Le format de l'email n'est pas valide.</div>"
+                $("#id_email").addClass('is-invalid').removeClass('is-valid');
+            }
+            $("#id_email").attr("data-content", new_content);
+            var popover = $("#id_email").data('bs.popover');
+            popover.setContent();
+        }).fail(function() {
+            console.log('failed');
         });
     } else if ( $("#id_email").hasClass('is-invalid') ) {
         $("#id_email").focus().popover('show');

@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_links %}
+    <!-- User CSS -->
+    <link href="{% static 'products/css/products.css' %}" rel="stylesheet" />
+    <link href="{% static 'products/css/product.css' %}" rel="stylesheet" />
+    <link href="{% static 'user/css/user.css' %}" rel="stylesheet" />
+    <link href="{% static 'user/css/footer.css' %}" rel="stylesheet" />
+    
+{% endblock head_links %}
+
+{% block body %}
+    <header class="masthead">
+        <div class="container h-100">
+            <div class="row h-100 align-items-center justify-content-center text-center">
+                <div class="col-lg-10 align-self-end">
+                    <h1 class="text-uppercase text-white font-weight-bold">{{product.name}}</h1>
+                    <hr class="divider my-4" />
+                    {% comment %} <h4 class="text-uppercase text-white font-weight-bold">Résultats de la recherche "{{product_search}}"</h4> {% endcomment %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Product section -->
+    <section class="product-section pt-0">
+        <div class="container" id="products_list">
+            <div class="row justify-content-center">
+                <div class="col-12 mb-2">
+                    <div class="product product-deselected p-3">
+                        <div class="row product-img-nutriscore justify-content-center">
+                            <img src="{{product.image_url}}" class="product-img"/>
+                            <div class="product-nutriscore-badge">
+                                <div class="nutriscore-text">NUTRI-SCORE</div>
+                                <div class="nutriscore-badge">
+                                    <div class="nutriscore nutriscore-a {% if product.nutriscore == 'A' %}nutriscore-active{% endif %}">A</div><!--
+                                    --><div class="nutriscore nutriscore-b {% if product.nutriscore == 'B' %}nutriscore-active{% endif %}">B</div><!--
+                                    --><div class="nutriscore nutriscore-c {% if product.nutriscore == 'C' %}nutriscore-active{% endif %}">C</div><!--
+                                    --><div class="nutriscore nutriscore-d {% if product.nutriscore == 'D' %}nutriscore-active{% endif %}">D</div><!--
+                                    --><div class="nutriscore nutriscore-e {% if product.nutriscore == 'E' %}nutriscore-active{% endif %}">E</div>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="row product-name justify-content-center">{{product.name}} - {{brand}}</h3>
+                        <a type="button" class="row my-4" id="show_product_infos">Afficher les informations de ce produit</a>
+                        <div class="collapse" id="product_informations">
+                            <div class="row"><h6>Quantité :</h6>&nbsp;{{product.quantity}}</div>
+                            <div class="row">
+                                <h6>Marque(s) :&nbsp;</h6>
+                                {% for brand in brands %}
+                                    <a type="button" class="brand-link">
+                                        <form method="get" action="{% url 'search' %}">
+                                            <input type="hidden" class="brand" value="{{brand}}" disabled>{{brand}}
+                                            {{search_form.product_search.as_hidden}}
+                                            {{search_form.type.as_hidden}}
+                                        </form>
+                                    </a>
+                                    {% if brands|length > 1 and forloop.counter < brands|length %}
+                                    ,&nbsp;
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <div class="row">
+                                <h6>Magasin(s) :&nbsp;</h6>
+                                {% for store in stores %}
+                                    <a type="button" class="store-link">
+                                        <form method="get" action="{% url 'search' %}">
+                                            <input type="hidden" class="store" value="{{store}}" disabled>{{store}}
+                                            {{search_form.product_search.as_hidden}}
+                                            {{search_form.type.as_hidden}}
+                                        </form>
+                                    </a>
+                                    {% if stores|length > 1 and forloop.counter < stores|length %}
+                                    ,&nbsp;
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <div class="row">
+                                <h6>Catégorie principale :&nbsp;</h6>
+                                <a type="button" class="category-link">
+                                    <form action="{% url 'search' %}" method="get">
+                                        &nbsp;{{product.compare_to_category.name_fr}}
+                                        <input type="hidden" class="category" value="{{product.compare_to_category.name_fr}}" disabled>
+                                        {{search_form.product_search.as_hidden}}
+                                        {{search_form.type.as_hidden}}
+                                    </form>
+                                </a>
+                            </div>
+                            <div class="row">
+                                <h6>Catégorie(s) secondaire(s) :&nbsp;</h6>
+                                {% for category in categories %}
+                                    <a type="button" class="category-link">
+                                        <form method="get" action="{% url 'search' %}">
+                                            <input type="hidden" class="category" value="{{category}}" disabled>{{category}}
+                                            {{search_form.product_search.as_hidden}}
+                                            {{search_form.type.as_hidden}}
+                                        </form>
+                                    </a>
+                                    {% if categories|length > 1 and forloop.counter < categories|length %}
+                                    ,&nbsp;
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <table class="table table-hover table-bordered my-2">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th scope="col">Informations nutritionnelles</th>
+                                        <th scope="col">Pour 100g / 100ml</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">Nutriscore</th>
+                                        <td>{{product.nutriscore}}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Energie</th>
+                                        <td>{{product.energy}} kcal</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Matières grasses</th>
+                                        <td>{{product.fat}} g</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">&nbsp;&nbsp;- dont acides gras saturés</th>
+                                        <td>{{product.satured_fat}} g</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Glucides</th>
+                                        <td>{{product.carbohydrates}} g</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">&nbsp;&nbsp;- dont sucres</th>
+                                        <td>{{product.sugar}} g</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Fibres</th>
+                                        <td>{{product.fibers}} g</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Protéines</th>
+                                        <td>{{product.proteins}} g</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Sel</th>
+                                        <td>{{product.salt}} g</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">&nbsp;&nbsp;- dont sodium</th>
+                                        <td>{{product.sodium}} g</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="row my-2" id="ingredients"><h6>Ingrédients :</h6>&nbsp;{{product.ingredients}}</div>
+
+
+                            <div class="store-code" hidden>{{product.code}}</div>
+                            <input type="hidden" id="store_image_url" disabled value="{{product.image_url}}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-center align-items-center mb-2">
+                {% if product in user_products %}
+                    <a type="button" class="row select-product delete-product">
+                        <i class="fas fa-trash-alt fa-lg"></i>
+                        <span class="pl-3">Supprimer de mes produits enregistrés</span>
+                    </a>
+                {% else %}
+                    <a type="button" class="row select-product save-product">
+                        <i class="far fa-save fa-lg"></i>
+                        <span class="pl-3">Enregistrer dans Mes Produits</span>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+    <section class="page-section pt-1">
+        <div class="container" id="products_list">
+            <div class="row">
+                <h3 class="row">Produits alternatifs au produit sélectionné :</h3>
+            </div>
+            <div class="row justify-content-center m-auto">
+                {% for product in alternatives %}
+                    <div class="col-12 col-md-4 mb-2 text-center">
+                        <div class="row product-page align-items-center product-deselected justify-content-center">
+                            <a class="col product select-product {% if product in user_products %}registered-product{% endif %}"
+                               type="button">
+                                <div class="row product-img-nutriscore justify-content-center">
+                                    <img src="{{product.image_url}}" class="product-img"/>
+                                    <div class="product-checkbox-link {% if product in user_products %}registered-checkbox{% else %}new-checkbox{% endif %}">
+                                        <div class="product-checkbox"></div>
+                                        <div class="checkbox-deselected select-checkbox {% if product in user_products %}checkbox-registered{% endif %}"></div>
+                                    </div>
+                                    <div class="product-nutriscore-badge">
+                                        <div class="nutriscore-text">NUTRI-SCORE</div>
+                                        <div class="nutriscore-badge">
+                                            <div class="nutriscore nutriscore-a {% if product.nutriscore == 'A' %}nutriscore-active{% endif %}">A</div><!--
+                                         --><div class="nutriscore nutriscore-b {% if product.nutriscore == 'B' %}nutriscore-active{% endif %}">B</div><!--
+                                         --><div class="nutriscore nutriscore-c {% if product.nutriscore == 'C' %}nutriscore-active{% endif %}">C</div><!--
+                                         --><div class="nutriscore nutriscore-d {% if product.nutriscore == 'D' %}nutriscore-active{% endif %}">D</div><!--
+                                         --><div class="nutriscore nutriscore-e {% if product.nutriscore == 'E' %}nutriscore-active{% endif %}">E</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row product-name justify-content-center">{{product.name}}</div>
+                                <div class="store-code" hidden>{{product.code}}</div>
+                                <div class="row justify-content-center align-items-center mb-4 save-or-delete">
+                                    {% if product in user_products %}
+                                        <a class="row delete-product" title="Supprimer ce produit">
+                                            <i class="fas fa-trash-alt fa-lg"></i>
+                                            <span class="pl-3">Supprimer ce produit</span>
+                                        </a>
+                                    {% else %}
+                                        <a class="row save-product" title="Sauvegarder ce produit">
+                                            <i class="far fa-save fa-lg"></i>
+                                            <span class="pl-3">Sauvegarder ce produit</span>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    <section id="save_products" class="sticky-bottom" hidden>
+        <form id="form_save" action="{% url 'save' %}" method="post">
+            {% csrf_token %}
+            <div class="container">
+                <div class="row justify-content-center">
+                    {% if user.is_authenticated %}
+                        <button class="btn btn-success" id="btn_save"></button>
+                    {% else %}
+                        <button class="btn btn-secondary" id="btn_connect_product"></button>
+                    {% endif %}
+                </div>
+            </div>
+            <input type="hidden" name="products_to_save" id="products_to_save" value="" />
+        </form>
+    </section>
+    <section id="delete_products" class="sticky-bottom" hidden>
+        <form id="form_delete" action="{% url 'delete' %}" method="post">
+            {% csrf_token %}
+            <div class="container">
+                <div class="row justify-content-center">
+                    {% if user.is_authenticated %}
+                        <button class="btn btn-danger" id="btn_delete"></button>
+                    {% else %}
+                        <button class="btn btn-secondary" id="btn_connect_product"></button>
+                    {% endif %}
+                </div>
+            </div>
+            <input type="hidden" name="products_to_delete" id="products_to_delete" value="" />
+        </form>
+    </section>
+{% endblock body %}
+
+{% block script %}
+    <!-- AJAX new account script -->
+
+    <script src="{% static 'user/js/user.js' %}"></script>
+    <script src="{% static 'products/js/product.js' %}"></script>
+    <script src="{% static 'products/js/products.js' %}"></script>
+
+{% endblock script %}

@@ -26,3 +26,10 @@ header.masthead {
 .form-check-label {
     font-size: 0.7rem;
 }
+
+/* input:-webkit-autofill {
+    background-image: inherit !important;
+    background-color: inherit !important;
+    color: inherit !important;
+    appearance: inherit;
+} */
