@@ -17,3 +17,17 @@ def home(request):
     form_user = ConnectionForm()
 
     return render(request, 'home/home.html', locals())
+
+
+def legal_notice(request):
+    """Legal Notice"""
+    search_form = SearchForm(
+        auto_id=False,
+        initial={
+            'product_search': "",
+            'type': 'search'
+        }
+    )
+    form_user = ConnectionForm()
+
+    return render(request, 'home/legal_notice.html', locals())

@@ -3,13 +3,12 @@ from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
-    path('', views.user_account, name="user_account"),
+    path('my_account/', views.UserAccountView.as_view(), name="user_account"),
     path('login/', views.LoginView.as_view(), name="login"),
     path('logout/', views.LogoutView.as_view(), name="logout_user"),
-    path('new/', views.new_account, name="new_account"),
-    path('create_new/', views.create_new, name="create_new"),
-    path('check_user_login/', views.check_user_login, name="check_user_login"),
-    path('check_email/', views.check_email, name="check_email"),
-    path('email_verification/', views.email_verification, name="email_verification"),
-    path('check_pwd/', views.check_pwd, name="check_pwd"),
+    path('new/', views.NewAccountView.as_view(), name="new_account"),
+    path('create_new/', views.NewAccountView.as_view(), name="create_new"),
+    path('check_user_login/', views.CheckLoginView.as_view(), name="check_user_login"),
+    path('email_verification/', views.CheckEmailView.as_view(), name="email_verification"),
+    path('check_pwd/', views.CheckPwdView.as_view(), name="check_pwd"),
 ]

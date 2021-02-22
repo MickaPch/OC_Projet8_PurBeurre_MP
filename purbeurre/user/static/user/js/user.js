@@ -63,13 +63,13 @@ $("#id_user_login").change(function() {
             type: "POST",
             data: {user_login: user_login}
         }).done(function(response) {
-            if (response == "True") {
+            if (response == "login not available") {
                 new_content += "<div class='invalid-input'>Ce login est déjà utilisé par un autre utilisateur.</div>"
                 $("#id_user_login").addClass('is-invalid').removeClass('is-valid');
             } else if (response == "Incorrect login format") {
                 new_content += "<div class='invalid-input'>Format incorrect (Lettres et chiffres acceptées seulement).</div>"
                 $("#id_user_login").addClass('is-invalid').removeClass('is-valid');
-            } else {
+            } else if (response == "login ok") {
                 new_content += "<div class='valid-input'>Ce login est disponible.</div>"
                 $("#id_user_login").addClass('is-valid').removeClass('is-invalid');
             }

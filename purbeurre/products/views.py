@@ -6,6 +6,7 @@ from django.views.generic import TemplateView
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.sites.shortcuts import get_current_site
 from django.views.decorators.csrf import csrf_exempt
 
 from products.models import (
@@ -48,8 +49,13 @@ class ProductsView(TemplateView):
                     or search_type == 'product'
                 ):
                     # Redirect to ProductView
+                    get_product = "".join([
+                        'http://',
+                        request.META['HTTP_HOST'].strip(),
+                        '/product/'
+                    ])
                     url_product = requests.get(
-                        os.path.join(request.META['HTTP_REFERER'], 'product/'),
+                        get_product,
                         params={
                             'product_code': search
                         }

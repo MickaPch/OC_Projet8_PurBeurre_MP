@@ -5,3 +5,7 @@ __pycache__/
 migrations/
 
 db.sqlite3
+
+.coverage
+.coveragerc
+htmlcov/

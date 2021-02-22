@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .validators import UsernameValidator
 
@@ -16,8 +16,6 @@ class UserManager(BaseUserManager):
 
     def _create_user(self, email, password, **extra_fields):
         """Create and save a User with the given email and password."""
-        if not email:
-            raise ValueError('The given email must be set')
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
@@ -53,7 +51,6 @@ class UserManager(BaseUserManager):
             raise ValueError('SuperUser must have is_superuser=True.')
         
         return self._create_user(email, password, **extra_fields)
-
 
 class User(AbstractUser):
     """User model for Pur Beurre"""

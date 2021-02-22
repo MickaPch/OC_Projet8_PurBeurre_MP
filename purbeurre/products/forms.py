@@ -36,22 +36,3 @@ class ProductForm(forms.Form):
     product_code = forms.CharField(
         max_length=100
     )
-
-
-class BrandForm(forms.Form):
-    """Brand search form"""
-    product_brand = forms.CharField(
-        max_length=100
-    )
-
-    def get_products(self):
-        """Return all product by brand search"""
-
-        prodbrand_results = ProdBrand.objects.filter(
-            brand__name__icontains=self.product_brand
-        )
-        total_products_result = Products.objects.filter(
-            prodbrand__in=prodbrand_results
-        ).distinct()
-
-        return total_products_result

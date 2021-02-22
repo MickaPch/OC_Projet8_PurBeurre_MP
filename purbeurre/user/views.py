@@ -1,24 +1,25 @@
 """User"""
 from django import forms
-from django.shortcuts import render, redirect
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.password_validation import validate_password
-from django.core.validators import validate_email, validate_slug
 from django.contrib.auth.validators import UnicodeUsernameValidator, ASCIIUsernameValidator
+from django.core.validators import validate_email, validate_slug
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
-from django.conf import settings
+from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.views.generic import TemplateView
 from django.views.decorators.csrf import csrf_exempt
-from django.urls import reverse
 
 import json
 import os
 
-from .forms import ConnectionForm, NewForm
 from .backends import AuthenticateBackend
+from .forms import ConnectionForm, NewForm
 from .models import User, Newsletter
 from .validators import validate_username, UsernameValidator
 
@@ -47,9 +48,6 @@ class LoginView(TemplateView):
                 redirect_path = '/'
 
             return redirect(redirect_path)
-
-        elif user is not None:
-            return render(request, 'user/check_email.html')
         else:
             return render(request, 'user/new_account.html')
 
@@ -66,70 +64,71 @@ class LogoutView(TemplateView):
         return redirect(self.template_name)
 
 
-@login_required
-def user_account(request):
-    """Show user account page"""
+class UserAccountView(LoginRequiredMixin, TemplateView):
+    """View to show user account"""
 
-    form_user = ConnectionForm()
+    template_name = "/"
 
-    return render(request, 'user/user.html', locals())
+    def get(self, request, **kwargs):
 
-def new_account(request):
-    """Show new user account page"""
+        form_user = ConnectionForm()
 
-    form_new = NewForm()
-    form_user = ConnectionForm()
+        return render(request, 'user/user.html', locals())
 
-    return render(request, 'user/new_account.html', locals())
 
-def create_new(request):
-    """Create a new user"""
+class NewAccountView(TemplateView):
+    """View to register new use"""
 
-    data = {'ok': False}
+    template_name = "/"
 
-    if request.method == "POST":
+    def get(self, request, **kwargs):
+        """Access new account page"""
+
+        form_new = NewForm()
+        form_user = ConnectionForm()
+
+        return render(request, 'user/new_account.html', locals())
+    
+    def post(self, request, **kwargs):
+        """Register new user and redirect to user account"""
+
+        data = {'ok': False}
         form_new = NewForm(request.POST)
         if form_new.is_valid():
             email = form_new.cleaned_data["email"]
-            check_email(email)
-            pwd = form_new.cleaned_data["pwd"]
-            pwd_confirm = form_new.cleaned_data["pwd_confirm"]
-            user_login = form_new.cleaned_data["user_login"]
-            firstname = form_new.cleaned_data["firstname"]
-            lastname = form_new.cleaned_data["lastname"]
-            newsletter = form_new.cleaned_data["newsletter"]
-            user = None
-            if User.objects.filter(email=email).count() == 0:
-                try:
-                    user = User.objects.create_user(
-                        email,
-                        password=pwd,
-                        username=user_login,
-                        first_name=firstname,
-                        last_name=lastname
-                    )
-                    user.save()
-                    data['ok'] = True
-                    print('New user OK')
-                    print(user)
-                    # try:
-                    #     #####################################################
-                    #     # !!! NEWSLETTER
-                    #     #####################################################
-                    #     user_newsletter = Newsletter.objects.update_or_create(
-                    #         user,
-                    #         newsletter
-                    #     )
-                    #     print('Newsletter OK')
-                    #     print(user_newsletter)
-                    # except:
-                    #     data['ok'] = False
-                except ValidationError:
-                    data['ok'] = False
+            if CheckEmailView.check_email(self, email, check_available=True):
+                pwd = form_new.cleaned_data["pwd"]
+                pwd_confirm = form_new.cleaned_data["pwd_confirm"]
+                user_login = form_new.cleaned_data["user_login"]
+                if user_login == '':
+                    user_login = email
+                firstname = form_new.cleaned_data["firstname"]
+                lastname = form_new.cleaned_data["lastname"]
+                newsletter = form_new.cleaned_data["newsletter"]
+                user = User.objects.create_user(
+                    email,
+                    password=pwd,
+                    username=user_login,
+                    first_name=firstname,
+                    last_name=lastname
+                )
+                user.save()
+                data['ok'] = True
+                # try:
+                #     #####################################################
+                #     # !!! NEWSLETTER
+                #     #####################################################
+                #     user_newsletter = Newsletter.objects.update_or_create(
+                #         user,
+                #         newsletter
+                #     )
+                #     print('Newsletter OK')
+                #     print(user_newsletter)
+                # except:
+                #     data['ok'] = False
             else:
-                print('utilisateur déjà pris')
+                data['email'] = False
         else:
-            print('Form is invalid')
             try:
                 validate_email(form_new.cleaned_data["email"])
             except:
@@ -141,74 +140,88 @@ def create_new(request):
             except:
                 data['pwd'] = False
 
-    else:
-        form_new = NewForm()
-        user = AnonymousUser()
+        if data['ok']:
+            new_user = authenticate(
+                request,
+                username=email,
+                password=pwd
+            )
+            if new_user is not None:
+                login(request, new_user)
+                data['url'] = reverse('user_account')
 
-    print(data)
+        return JsonResponse(data)
 
-    new_user = authenticate(
-        request,
-        username=email,
-        password=pwd
-    )
-    if new_user is not None:
-        login(request, new_user)
+class CheckLoginView(TemplateView):
+    """
+    Login check :
+        - If not taken
+        - If format is correct
+    """
+    template = '/'
 
-        print('redirect')
+    @csrf_exempt
+    def post(self, request, **kwargs):
+        user_login = request.POST.get("user_login")
 
-        data['url'] = reverse('user_account')
+        if User.objects.filter(username=user_login).exists():
+            return HttpResponse('login not available')
+        else:
+            try:
+                validate_username(user_login)
+                return HttpResponse('login ok')
+            except ValidationError:
+                return HttpResponse('Incorrect login format')
 
-    return JsonResponse(data)
+class CheckEmailView(TemplateView):
+    """
+    Email check :
+        - If not taken
+        - If format is correct
+    """
+    template = '/'
 
-@csrf_exempt
-def check_user_login(request):
-    user_login = request.POST.get("user_login")
+    @csrf_exempt
+    def post(self, request, **kwargs):
+        email = request.POST.get('email')
 
-    try:
-        # UsernameValidator(user_login)
-        # print(user_validate)
-        # validate_slug(user_login)
-        validate_username(user_login)
-        print(user_login)
-    except ValidationError:
-        print('incorrect format')
-        return HttpResponse('Incorrect login format')
+        if self.check_email(email):
+            return HttpResponse("email ok")
+        else:
+            return HttpResponse("email nok")
+    
+    def check_email(self, email, check_available=False):
+        """Email check usable out of view"""
+        if check_available:
+            if User.objects.filter(email=email).exists():
+                return False
+        try:
+            validate_email(email)
+            return True
+        except ValidationError:
+            return False
 
-    if User.objects.filter(username=user_login).exists():
-        return HttpResponse(True)
-    else:
-        return HttpResponse(False)
 
-@csrf_exempt
-def email_verification(request):
-    email = request.POST.get('email')
+class CheckPwdView(TemplateView):
+    """
+    Pwd check :
+        - If not too common
+        - If format is correct :
+            - contains at least one capital
+            - contains at least one digit
+            - contains at least 8 caracters
+            - contains at least one special caracter
 
-    try:
-        validate_email(email)
-        return HttpResponse("email ok")
-    except ValidationError:
-        return HttpResponse("email nok")
+    """
+    template = '/'
 
-def check_email(email):
+    @csrf_exempt
+    def post(self, request, **kwargs):
+        pwd = request.POST.get("pwd")
 
-    try:
-        validate_email(email)
-    except ValidationError:
-        return HttpResponse("Email non valide")
-
-    if User.objects.filter(email=email).exists():
-        return HttpResponse("email pris")
-    else:
-        return HttpResponse("email disponible")
-
-@csrf_exempt
-def check_pwd(request):
-    pwd = request.POST.get("pwd")
-
-    try:
-        validate_password(pwd)
-    except ValidationError as err:
-        return HttpResponse(json.dumps(err.messages))
-    else:
-        return HttpResponse("Mot de passe OK")
+        try:
+            validate_password(pwd)
+        except ValidationError as err:
+            return HttpResponse(json.dumps(err.messages))
+        else:
+            return HttpResponse("Mot de passe OK")
