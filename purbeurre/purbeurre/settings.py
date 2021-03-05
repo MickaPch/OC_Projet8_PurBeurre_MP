@@ -169,3 +169,5 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # Production email
 # # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_PORT = 1025
+
+INTERNAL_IPS = ['127.0.0.1',]

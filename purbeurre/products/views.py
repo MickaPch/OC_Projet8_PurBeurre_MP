@@ -3,7 +3,7 @@ import os
 
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
@@ -130,6 +130,31 @@ class ProductsView(TemplateView):
 
         return products
 
+    def get_relevant_or_random(self):
+        """Return 6 most relevant products or random"""
+
+        user_products = UserSave.objects.all().distinct('product')
+        # print(Products.objects.filter(usersave__in=user_products))
+        if user_products.count() >= 6:
+            products = Products.objects.filter(
+                usersave__in=UserSave.objects.annotate(
+                    product_count=Count('product')
+                ).order_by('-product_count')[:6]
+            )
+        elif user_products.count() > 0:
+            diff = 6 - user_products.count()
+            usersave_products = Products.objects.filter(
+                usersave__in=user_products
+            )
+            random_products = Products.objects.exclude(
+                usersave__in=user_products
+            ).order_by('?')[:diff]
+            products = random_products.union(usersave_products)
+        else:
+            products = Products.objects.all().order_by('?')[:6]
+        
+        return products
+
 
 class ProductView(TemplateView):
     """View to show searched products"""
@@ -227,6 +252,8 @@ class SaveView(LoginRequiredMixin,TemplateView):
     def post(self, request, **kwargs):
 
         products_to_save = request.POST['products_to_save']
+        search_form = SearchForm(auto_id=False)
+        form_user = ConnectionForm()
 
         try:
             new_products = products_to_save.split(',')
@@ -252,6 +279,8 @@ class DeleteView(LoginRequiredMixin,TemplateView):
     def post(self, request, **kwargs):
 
         products_to_delete = request.POST['products_to_delete']
+        search_form = SearchForm(auto_id=False)
+        form_user = ConnectionForm()
 
         try:
             new_products = products_to_delete.split(',')

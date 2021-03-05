@@ -22,12 +22,16 @@
     </header>
     <div class="container mt-3">
         <h6 class="row">
-            Liste des produits enregistrés pour l'utilisateur&nbsp;<!--
-         -->{% if user.username != "" %}<!--
-             --><strong>{{user.username}}</strong><!--
-         -->{% else %}<!--
-             --><strong>{{user.email}}</strong><!--
-         -->{% endif %}&nbsp;:
+            {% if products|length > 0 %}
+                Liste des produits enregistrés pour l'utilisateur&nbsp;<!--
+            -->{% if user.username != "" %}<!--
+                --><strong>{{user.username}}</strong><!--
+            -->{% else %}<!--
+                --><strong>{{user.email}}</strong><!--
+            -->{% endif %}&nbsp;:
+            {% else %}
+                Aucun produit enregistré pour l'utilisateur
+            {% endif %}
         </h6>
     </div>
 

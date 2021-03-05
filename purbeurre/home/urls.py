@@ -1,7 +1,8 @@
-from django.urls import path, include
+"""Module home.urls"""
+from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.home, name="home"),
+    path('', views.HomeView.as_view(), name="home_page"),
     path('legal_notice', views.legal_notice, name="legal_notice"),
 ]

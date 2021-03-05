@@ -4,6 +4,7 @@
 {% block head_links %}
     <!-- Home CSS -->
     <link href="{% static 'home/css/home.css' %}" rel="stylesheet" />
+    <link href="{% static 'home/css/legal.css' %}" rel="stylesheet" />
 
 {% endblock head_links %}
 
@@ -19,7 +20,7 @@
             </div>
         </div>
     </header>
-    <!-- Colette & Rémy -->
+    <!-- Legal notice -->
     <section class="page-section" id="about_us">
         <div class="container">
             <div class="row d-flex justify-content-between">
@@ -28,7 +29,7 @@
                         Merci de lire avec attention les différentes modalités d'utilisation du présent site avant d'y parcourir ses pages.
                         En vous connectant sur ce site, vous acceptez, sans réserves, les présentes modalités.<br>
                         Aussi, conformément à l'article n°6 de la Loi n°2004-575 du 21 Juin 2004 pour la confiance dans l'économie numérique,
-                        les responsables du présent site internet {{site.domain}} sont :
+                        les responsables du présent site internet {{request.get_host}} sont :
                     </p>
                 </div>
             </div>
@@ -41,7 +42,7 @@
                     <p>PARIS</p>
                     <p>Téléphone : 06 12 34 56 78</p>
                     <p>Email : example@gmail.com</p>
-                    <p>Site web : {{site.domain}}</p>
+                    <p>Site web : {{request.get_host}}</p>
                 </div>
             </div>
             <h3 class="text-center mt-0">Hébergement</h3>
@@ -85,7 +86,7 @@
             <div class="row d-flex justify-content-between">
                 <div class="col-10">
                     <p class="text-justify">
-                        Le site {{site.domain}} peut-être amené à vous demander l’acceptation des cookies pour des besoins
+                        Le site {{request.get_host}} peut-être amené à vous demander l’acceptation des cookies pour des besoins
                         de statistiques et d’affichage. Un cookie est une information déposée sur votre disque dur
                         par le serveur du site que vous visitez.<br>
                         Il contient plusieurs données qui sont stockées sur votre ordinateur dans un simple fichier texte auquel un serveur
@@ -121,11 +122,11 @@
             <div class="row d-flex justify-content-between">
                 <div class="col-10">
                     <p class="text-justify">
-                        L’ensemble des activités de la société ainsi que ses informations sont présentés sur notre site {{site.domain}}.<br>
-                        SARL PUR BEURRE s’efforce de fournir sur le site {{site.domain}} des informations aussi précises que possible.
-                        Les renseignements figurant sur le site {{site.domain}} ne sont pas exhaustifs et les photos non contractuelles.<br>
+                        L’ensemble des activités de la société ainsi que ses informations sont présentés sur notre site {{request.get_host}}.<br>
+                        SARL PUR BEURRE s’efforce de fournir sur le site {{request.get_host}} des informations aussi précises que possible.
+                        Les renseignements figurant sur le site {{request.get_host}} ne sont pas exhaustifs et les photos non contractuelles.<br>
                         Ils sont donnés sous réserve de modifications ayant été apportées depuis leur mise en ligne.
-                        Par ailleurs, tous les informations indiquées sur le site {{site.domain}} sont données à titre indicatif,
+                        Par ailleurs, tous les informations indiquées sur le site {{request.get_host}} sont données à titre indicatif,
                         et sont susceptibles de changer ou d’évoluer sans préavis.<br>
                     </p>
                 </div>
@@ -155,7 +156,7 @@
             <div class="row d-flex justify-content-between">
                 <div class="col-10">
                     <p class="text-justify">
-                        Tout le contenu du présent site {{site.domain}}, incluant, de façon non limitative, les graphismes, images,
+                        Tout le contenu du présent site {{request.get_host}}, incluant, de façon non limitative, les graphismes, images,
                         textes, vidéos, animations, sons, logos, gifs et icônes ainsi que leur mise en forme sont la propriété
                         exclusive de la société à l’exception des marques, logos ou contenus appartenant à d’autres sociétés
                         partenaires ou auteurs.<br>
@@ -185,7 +186,7 @@
             <div class="row d-flex justify-content-between">
                 <div class="col-10">
                     <p class="text-justify">
-                        Les présentes conditions du site {{site.domain}} sont régies par les lois françaises et toute contestation
+                        Les présentes conditions du site {{request.get_host}} sont régies par les lois françaises et toute contestation
                         ou litiges qui pourraient naître de l’interprétation ou de l’exécution de celles-ci seront de la compétence
                         exclusive des tribunaux dont dépend le siège social de la société. La langue de référence, pour le règlement
                         de contentieux éventuels, est le français.<br>
@@ -198,7 +199,7 @@
                 <div class="col-10">
                     <p class="text-justify">
                         De manière générale, vous n’êtes pas tenu de nous communiquer vos données personnelles lorsque vous visitez
-                        notre site Internet {{site.domain}}.<br>
+                        notre site Internet {{request.get_host}}.<br>
                         Cependant, ce principe comporte certaines exceptions. En effet, pour certains services proposés par notre site,
                         vous pouvez être amenés à nous communiquer certaines données telles que : votre addresse électronique, votre nom 
                         (facultatif), votre prénom (facultatif) et un login de connexion (facultatif). Tel est le cas lorsque vous souhaitez

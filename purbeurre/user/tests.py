@@ -1,19 +1,9 @@
+"""Module user.tests"""
 from django.apps import apps
 from django.test import TestCase, Client
-from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.hashers import make_password
 
 from user.apps import UserConfig
-from user.views import (
-    LoginView,
-    LogoutView,
-    NewAccountView,
-    UserAccountView,
-    CheckLoginView,
-    CheckEmailView,
-    CheckPwdView
-)
-from user.forms import ConnectionForm
 from user.models import User
 from user.validators import (
     CapitalValidator,
@@ -40,6 +30,7 @@ class NewAccountViewTest(TestCase):
     """Testing new account page"""
 
     def setUp(self):
+        """Setup new account test"""
         self.email = 'foo@test.com'
         self.pwd = 'Pwd4Test!'
 
@@ -52,14 +43,14 @@ class NewAccountViewTest(TestCase):
             'lastname': '',
             'cgu': True
         }
-    
+
     def test_new_account_view(self):
         """Test get new user account view"""
 
         response = self.client.get('/user/new/')
 
         self.assertEqual(response.status_code, 200)
-    
+
     def test_register_new_account(self):
         """Test to register new user"""
 
@@ -80,7 +71,10 @@ class NewAccountViewTest(TestCase):
         self.assertEqual(user_login, True)
 
     def test_already_exists_user(self):
-        # Call twice again to return invalid form / Email already used
+        """
+        Call twice to return invalid form
+        Email already used
+        """
         self.client.post(
             '/user/create_new/',
             self.user
@@ -99,7 +93,9 @@ class NewAccountViewTest(TestCase):
         )
 
     def test_wrong_email(self):
-        # Call with wrong email to return invalid form / Email already used
+        """
+        Call with wrong email to return invalid form
+        Email format not validated"""
         user_wrong_email = {
             'email': '@uihfur',
             'pwd': self.pwd,
@@ -123,7 +119,10 @@ class NewAccountViewTest(TestCase):
         )
 
     def test_wrong_pwd(self):
-        # Call with wrong pwd confirmation to return invalid form / Email already used
+        """
+        Call with wrong pwd confirmation to return invalid form
+        Password is not the same in both fields
+        """
         invalid_pwd = 'khhiufr/'
         user_wrong_pwd = {
             'email': 'new_foo@example.com',
@@ -152,6 +151,7 @@ class LoginViewTest(TestCase):
     """Test login user"""
 
     def setUp(self):
+        """Setup login test"""
 
         self.user = {
             'connect-user_login': 'foo@example.com',
@@ -161,13 +161,12 @@ class LoginViewTest(TestCase):
     def test_login_user(self):
         """Test login view / redirect home page"""
         User.objects.create(
-            username="admin", 
+            username="admin",
             email="foo@example.com",
             password=make_password("admin")
         )
-        # TEST WITH REDIRECT TO HOME PAGE
-        c = Client()
-        response = c.post(
+        client = Client()
+        response = client.post(
             '/user/login/',
             self.user,
             follow=True
@@ -179,17 +178,17 @@ class LoginViewTest(TestCase):
         )
 
     def test_login_with_redirect(self):
-        # TEST WITH REDIRECT TO ACTUAL PAGE
+        """Test login view / redirect actual page"""
         User.objects.create(
-            username="admin", 
+            username="admin",
             email="foo@example.com",
             password=make_password("admin")
         )
-        c = Client(
+        client = Client(
             HTTP_REFERER='/user/new/'
         )
 
-        response = c.post(
+        response = client.post(
             '/user/login/',
             self.user,
             follow=True
@@ -201,14 +200,14 @@ class LoginViewTest(TestCase):
         )
 
     def test_login_bad_user(self):
-        # TEST BAD USER
+        """Test login view / bad user"""
         User.objects.create(
-            username="admin", 
+            username="admin",
             email="foo@example.com",
             password=make_password("admin")
         )
-        c = Client()
-        response = c.post(
+        client = Client()
+        response = client.post(
             '/user/login/',
             {
                 'connect-user_login': 'bad_login',
@@ -259,9 +258,10 @@ class LogoutViewTest(TestCase):
     """Test logout user"""
 
     def setUp(self):
+        """setup logout test"""
 
         User.objects.create(
-            username="admin", 
+            username="admin",
             email="foo@example.com",
             password=make_password("admin")
         )
@@ -298,8 +298,9 @@ class UserAccountViewTest(TestCase):
     """Testing user account page"""
 
     def setUp(self):
+        """setup user account test"""
         User.objects.create(
-            username="admin", 
+            username="admin",
             email="foo@example.com",
             password=make_password("admin")
         )
@@ -323,6 +324,7 @@ class UserLoginViewTest(TestCase):
     """Check user login View"""
 
     def setUp(self):
+        """setup user login test"""
         self.user = User.objects.create_user(
             username='admin',
             email='foo@example.com',
@@ -339,6 +341,7 @@ class UserLoginViewTest(TestCase):
         }
 
     def test_good_user_login(self):
+        """Test user login"""
         response = self.client.post(
             '/user/check_user_login/',
             self.good_login
@@ -346,6 +349,7 @@ class UserLoginViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_exists_user_login(self):
+        """Test user login / already exists"""
         response = self.client.post(
             '/user/check_user_login/',
             self.login_exists
@@ -357,6 +361,7 @@ class UserLoginViewTest(TestCase):
         )
 
     def test_bad_user_login(self):
+        """Test user login / bad format"""
         response = self.client.post(
             '/user/check_user_login/',
             self.bad_login
@@ -371,6 +376,7 @@ class EmailLoginViewTest(TestCase):
     """Check user email View"""
 
     def setUp(self):
+        """Test email check"""
         self.good_email = {
             'email': 'foo@example.com'
         }
@@ -379,6 +385,7 @@ class EmailLoginViewTest(TestCase):
         }
 
     def test_good_email(self):
+        """Test email check / good email"""
         response = self.client.post(
             '/user/email_verification/',
             self.good_email
@@ -390,6 +397,7 @@ class EmailLoginViewTest(TestCase):
         )
 
     def test_bad_email(self):
+        """Test email check / bad format email"""
         response = self.client.post(
             '/user/email_verification/',
             self.bad_email
@@ -419,6 +427,7 @@ class CheckPwdViewTest(TestCase):
     """Check user pwd View"""
 
     def setUp(self):
+        """Test pwd check"""
         self.good_pwd = {
             'pwd': 'Pwd4Test!'
         }
@@ -427,6 +436,7 @@ class CheckPwdViewTest(TestCase):
         }
 
     def test_bad_pwd(self):
+        """Test pwd check / bad format pwd"""
         response = self.client.post(
             '/user/check_pwd/',
             self.bad_pwd
@@ -460,6 +470,7 @@ class CheckPwdViewTest(TestCase):
         )
 
     def test_good_pwd(self):
+        """Test pwd check / good pwd"""
         response = self.client.post(
             '/user/check_pwd/',
             self.good_pwd
@@ -471,21 +482,25 @@ class CheckPwdViewTest(TestCase):
         )
 
 class SuperUserTest(TestCase):
-    
+    """Test Superuser create"""
+
     def setUp(self):
+        """setup superuser creation test"""
         self.user = User.objects.create_superuser(
             username='admin',
             email='foo@example.com',
             password=make_password('admin')
         )
-    
+
     def test_superuser(self):
+        """test superuser creation"""
         self.assertEqual(
             self.user.is_superuser,
             True
         )
 
     def test_wrong_staff_superuser(self):
+        """test wrong staff superuser creation"""
         with self.assertRaises(ValueError):
             User.objects.create_superuser(
                 username='admin',
@@ -495,6 +510,7 @@ class SuperUserTest(TestCase):
             )
 
     def test_wrong_superuser(self):
+        """test wrong superuser superuser creation"""
         with self.assertRaises(ValueError):
             User.objects.create_superuser(
                 username='admin',

@@ -1,3 +1,4 @@
+"""Module home.tests"""
 from django.apps import apps
 from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import AnonymousUser
@@ -25,7 +26,7 @@ class HomeViewTest(TestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
-    
+
     def test_home_view(self):
         """Test get user home"""
 

@@ -1,7 +1,8 @@
-"""User forms"""
+"""Module user.forms"""
 from django import forms
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils.safestring import mark_safe
+
 
 class ConnectionForm(forms.Form):
     """Connection form"""
@@ -51,8 +52,10 @@ class NewForm(forms.Form):
         max_length=30,
         required=False,
     )
+    string_cgu = "J'ai lu et j'accepte les <a href='#' target='_blank'>" \
+                 "Conditions Générales d'Utilisation</a>."
     cgu = forms.BooleanField(
-        label=mark_safe("J'ai lu et j'accepte les <a href='#' target='_blank'>Conditions Générales d'Utilisation</a>."),
+        label=mark_safe(string_cgu),
         required=True
     )
     newsletter = forms.BooleanField(

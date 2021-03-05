@@ -28,7 +28,7 @@
         <div class="container" id="products_list">
             <div class="row justify-content-center">
                 <div class="col-12 mb-2">
-                    <div class="product product-deselected p-3">
+                    <div class="product p-3">
                         <div class="row product-img-nutriscore justify-content-center">
                             <img src="{{product.image_url}}" class="product-img"/>
                             <div class="product-nutriscore-badge">
@@ -42,7 +42,7 @@
                                 </div>
                             </div>
                         </div>
-                        <h3 class="row product-name justify-content-center">{{product.name}} - {{brand}}</h3>
+                        <h3 class="row justify-content-center">{{product.name}} - {{brand}}</h3>
                         <a type="button" class="row my-4" id="show_product_infos">Afficher les informations de ce produit</a>
                         <div class="collapse" id="product_informations">
                             <div class="row"><h6>Quantité :</h6>&nbsp;{{product.quantity}}</div>
@@ -161,14 +161,14 @@
                     </div>
                 </div>
             </div>
-            <div class="row justify-content-center align-items-center mb-2">
+            <div class="row justify-content-center align-items-center mb-2 save-or-delete">
                 {% if product in user_products %}
-                    <a type="button" class="row select-product delete-product">
+                    <a type="button" class="row delete-product">
                         <i class="fas fa-trash-alt fa-lg"></i>
                         <span class="pl-3">Supprimer de mes produits enregistrés</span>
                     </a>
                 {% else %}
-                    <a type="button" class="row select-product save-product">
+                    <a type="button" class="row save-product">
                         <i class="far fa-save fa-lg"></i>
                         <span class="pl-3">Enregistrer dans Mes Produits</span>
                     </a>
