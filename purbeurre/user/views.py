@@ -23,9 +23,6 @@ from .forms import ConnectionForm, NewForm
 from .models import User, Newsletter
 from .validators import validate_username, UsernameValidator
 
-# Session for authenticate
-# from django.contrib.sessions.models import Session
-
 
 class LoginView(TemplateView):
     """View to login User"""

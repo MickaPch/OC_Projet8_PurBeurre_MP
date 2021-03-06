@@ -4,7 +4,6 @@ from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import AnonymousUser
 
 from home.apps import HomeConfig
-from home.views import home
 
 
 class HomeConfigTest(TestCase):
@@ -30,8 +29,8 @@ class HomeViewTest(TestCase):
     def test_home_view(self):
         """Test get user home"""
 
-        request = self.factory.get('/')
-        request.user = AnonymousUser()
-        response = home(request)
+        response = self.client.get(
+            '/'
+        )
 
         self.assertEqual(response.status_code, 200)

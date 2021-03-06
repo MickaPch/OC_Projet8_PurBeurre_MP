@@ -1,9 +1,11 @@
+"""Selenium tests"""
+import time
+
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium.webdriver.chrome.webdriver import WebDriver
-# from selenium.webdriver import Chrome
 from selenium.webdriver.common.keys import Keys
 
-import time
+from purbeurre.lib.silent_connection_reset import ConnectionResetErrorSwallowingLiveServerThread
 
 class MySeleniumTests(StaticLiveServerTestCase):
     """Selenium tests class"""
@@ -12,13 +14,15 @@ class MySeleniumTests(StaticLiveServerTestCase):
         'products.json',
     ]
 
+    # Silent WinError 10054
+    server_thread_class = ConnectionResetErrorSwallowingLiveServerThread
+
     @classmethod
     def setUpClass(cls):
         """Setup selenium tests"""
         super().setUpClass()
         cls.selenium = WebDriver(executable_path="C:/Users/mpe3661/AppData/Local/chromedriver")
         cls.selenium.maximize_window()
-        # cls.selenium.implicitly_wait(10)
 
     @classmethod
     def tearDownClass(cls):
@@ -122,9 +126,6 @@ class MySeleniumTests(StaticLiveServerTestCase):
             'Contact'
         )
         element.click()
-        # FIND METHOD TO CHECK IF CONTACT TITLE IS VISIBLE ON PAGE
-        # section_contact = self.selenium.find_element_by_id('contact')
-        # contact_title = section_contact.find_element_by_tag_name('h2')
 
     def test_get_legals(self):
         """

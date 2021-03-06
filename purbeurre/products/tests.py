@@ -1,7 +1,9 @@
 from django.apps import apps
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
-from django.test import TestCase, RequestFactory, Client
+from django.test import TestCase, RequestFactory, Client, LiveServerTestCase
+
+from unittest.mock import patch
 
 from products.apps import ProductsConfig
 from products.models import (
@@ -14,7 +16,14 @@ from products.models import (
     ProdStore,
     UserSave
 )
+from products.management.commands.classes import (
+    ImportCategories,
+    Category,
+    ProductImportation
+)
 from user.models import User
+
+import os
 
 
 def initiate_test_db():
@@ -87,7 +96,7 @@ class ProductsConfigTest(TestCase):
             'products'
         )
 
-class ProductsViewTest(TestCase):
+class ProductsViewTest(LiveServerTestCase):
     """Testing products view"""
     def setUp(self):
         initiate_test_db()
@@ -137,10 +146,10 @@ class ProductsViewTest(TestCase):
             'product_search': '123456789',
             'type': 'search'
         }
+        host_url = str(self.live_server_url).replace('http://', '')
         client = Client(
-            HTTP_HOST='localhost'
+            HTTP_HOST=host_url
         )
-        # request = RequestFactory()
 
         response = client.get(
             '/search/',
@@ -164,7 +173,7 @@ class ProductViewTest(TestCase):
 
     def test_get_product(self):
         """Test get a product"""
-        
+
         response = self.client.get(
             '/product/',
             self.product_form,
@@ -320,3 +329,126 @@ class UserProductsViewTest(TestCase):
             '/my_products/'
         )
         self.assertEqual(response.status_code, 200)
+
+class IntegrationTest(TestCase):
+    """
+    Integration Test
+    1. Get homepage
+    2. Login user
+    3. Search product
+    4. Access product page
+    5. Save product
+    6. Logout user
+    """
+
+    fixtures = [
+        'users.json',
+        'products.json',
+    ]
+
+    def setUp(self):
+        self.client = Client()
+        self.product_form = {
+            'product_code': '3017620422003'
+        }
+        self.product_save = {
+            'products_to_save': '3017620422003'
+        }
+
+    def test_integration(self):
+        """Integration tests"""
+
+        self.get_home()
+        self.login_user()
+        self.search_product()
+        self.product_page()
+        self.save_product()
+        self.logout_user()
+
+    def get_home(self):
+        """Get home page"""
+
+        response = self.client.get('/')
+        self.assertTemplateUsed(template_name='home/home.html')
+        self.assertEqual(response.status_code, 200)
+
+    def login_user(self):
+        """Login user"""
+        response = self.client.login(
+            username='foo@example.com',
+            password='admin'
+        )
+        self.assertEqual(response, True)
+
+    def search_product(self):
+        """Search product"""
+        search_form = {
+            'product_search': 'nutella',
+            'type': 'search'
+        }
+        response = self.client.get(
+            '/search/',
+            search_form,
+            follow=True
+        )
+        self.assertTemplateUsed(template_name='products/search.html')
+        self.assertEqual(response.status_code, 200)
+
+    def product_page(self):
+        """Product page"""
+        response = self.client.get(
+            '/product/',
+            self.product_form,
+            follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(template_name='products/product.html')
+
+    def save_product(self):
+        response = self.client.post(
+            '/save/',
+            self.product_save
+        )
+        user = User.objects.get(email='foo@example.com')
+        product_saved = Products.objects.get(
+            code=self.product_save['products_to_save']
+        )
+        save_count = UserSave.objects.filter(
+            product=product_saved,
+            user=user
+        ).count()
+        self.assertEqual(save_count, 1)
+        self.assertEqual(response.status_code, 302)
+        self.assertTemplateUsed(template_name='products/my_products.html')
+
+    def logout_user(self):
+        user = {
+            'connect-user_login': 'foo@example.com',
+            'connect-pwd': 'admin'
+        }
+        response = self.client.get(
+            '/user/logout/',
+            user,
+            follow=True
+        )
+
+        self.assertEqual(
+            response.context['user'].is_authenticated,
+            False
+        )
+
+class MockTest(TestCase):
+
+    @patch('products.management.commands.classes.requests')
+    def test_mock_import_categories(self, mock_requests):
+        mock_requests.get.assert_not_called()
+        ImportCategories()
+        mock_requests.get.assert_called_once()
+
+    @patch('products.models.Categories')
+    @patch('products.management.commands.classes.requests')
+    def test_mock_category_get_products(self, mock_requests, mock_category):
+        mock_requests.get.assert_not_called()
+        category = Category(mock_category)
+        category.get_products_list()
+        mock_requests.get.assert_called_once()

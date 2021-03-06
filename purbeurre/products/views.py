@@ -19,7 +19,6 @@ from products.models import (
     ProdStore,
     UserSave
 )
-from user.models import User
 from products.forms import SearchForm, ProductForm
 from user.forms import ConnectionForm
 
@@ -128,31 +127,6 @@ class ProductsView(TemplateView):
             name__icontains=search
         ).distinct()
 
-        return products
-
-    def get_relevant_or_random(self):
-        """Return 6 most relevant products or random"""
-
-        user_products = UserSave.objects.all().distinct('product')
-        # print(Products.objects.filter(usersave__in=user_products))
-        if user_products.count() >= 6:
-            products = Products.objects.filter(
-                usersave__in=UserSave.objects.annotate(
-                    product_count=Count('product')
-                ).order_by('-product_count')[:6]
-            )
-        elif user_products.count() > 0:
-            diff = 6 - user_products.count()
-            usersave_products = Products.objects.filter(
-                usersave__in=user_products
-            )
-            random_products = Products.objects.exclude(
-                usersave__in=user_products
-            ).order_by('?')[:diff]
-            products = random_products.union(usersave_products)
-        else:
-            products = Products.objects.all().order_by('?')[:6]
-        
         return products
 
 

@@ -5,7 +5,6 @@ from django.views.generic import TemplateView
 
 from user.forms import ConnectionForm
 from products.forms import SearchForm
-from products.views import ProductsView
 
 
 class HomeView(TemplateView):
@@ -24,8 +23,6 @@ class HomeView(TemplateView):
             }
         )
         form_user = ConnectionForm()
-
-        products = ProductsView.get_relevant_or_random(self)
 
         return render(request, 'home/home.html', locals())
 
