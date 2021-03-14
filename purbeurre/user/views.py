@@ -13,6 +13,7 @@ from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic import TemplateView
+from django.views.generic.base import ContextMixin
 from django.views.decorators.csrf import csrf_exempt
 
 import json
@@ -25,7 +26,7 @@ from .validators import validate_username, UsernameValidator
 
 
 
-class UserFormView(TemplateView):
+class UserFormContext(ContextMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -24,33 +24,16 @@ class HomeConfigTest(TestCase):
 class HomeViewTests(TestCase):
     """Testing home view"""
 
-    @patch('home.views.SearchForm')
-    @patch('home.views.ConnectionForm')
-    def test_home_view(self, MockConnectionForm, MockSearchForm):
+    def test_home_view(self):
         """Test get user home"""
-        MockConnectionForm.assert_not_called()
-        MockSearchForm.assert_not_called()
 
-        self.client.get(
-            '/'
-        )
+        self.client.get('/')
 
         self.assertTemplateUsed('home.html')
 
-        MockConnectionForm.assert_called_once()
-        MockSearchForm.assert_called_once()
-
-    @patch('home.views.SearchForm')
-    @patch('home.views.ConnectionForm')
-    def test_legals(self, MockConnectionForm, MockSearchForm):
+    def test_legals(self):
         """Test legals page"""
-
-        MockConnectionForm.assert_not_called()
-        MockSearchForm.assert_not_called()
 
         self.client.get('/legal_notice/')
 
         self.assertTemplateUsed('legal_notice.html')
-
-        MockConnectionForm.assert_called_once()
-        MockSearchForm.assert_called_once()

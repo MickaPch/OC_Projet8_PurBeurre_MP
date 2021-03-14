@@ -44,7 +44,7 @@ class GetProductsQueryTool():
 
     def get_products_by_name(self):
         """Return products found by name"""
-        
+
         products = Products.objects.filter(
             name__icontains=self.search
         ).distinct()

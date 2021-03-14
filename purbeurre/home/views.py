@@ -3,24 +3,17 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 
-from user.views import UserFormView
-from products.views import ProductFormView
+from user.views import UserFormContext
+from products.views import ProductFormContext
 
 
-class HomeView(ProductFormView, UserFormView):
-    """View to show searched products"""
+class HomeView(TemplateView, ProductFormContext, UserFormContext):
+    """Home view"""
 
     template_name = "home/home.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
 
-
-class LegalNoticeView(ProductFormView, UserFormView):
+class LegalNoticeView(TemplateView, ProductFormContext, UserFormContext):
+    """Legal notice view"""
 
     template_name = 'home/legal_notice.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context

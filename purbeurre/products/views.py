@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 
 from django.shortcuts import render, redirect, reverse
 from django.views.generic import TemplateView, View, FormView
+from django.views.generic.base import ContextMixin
 from django.db.models import Q, Count
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -22,11 +23,11 @@ from products.models import (
     UserSave
 )
 from products.forms import SearchForm, SaveForm, DeleteForm
-from user.views import UserFormView
+from user.views import UserFormContext
 from products.queries import GetProductsQueryTool, CheckProduct, UserProducts
 
 
-class ProductFormView(TemplateView):
+class ProductFormContext(ContextMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -57,7 +58,7 @@ class SearchFormRedirect(View):
             return redirect('/')
 
 
-class ProductsView(ProductFormView, UserFormView):
+class ProductsView(TemplateView, ProductFormContext, UserFormContext):
     """View to show searched products"""
 
     template_name = "products/search.html"
@@ -119,15 +120,20 @@ class StoreView(ProductsView):
         return context
 
 
-class ProductView(ProductsView):
+class ProductView(TemplateView, ProductFormContext, UserFormContext):
     """View to show searched products"""
 
     template_name = "products/product.html"
 
     def get_context_data(self, **kwargs):
 
+
         context = super().get_context_data(**kwargs)
         product_code = kwargs['search']
+        context['search_form'] = SearchForm(
+            initial={'product_search': product_code},
+            auto_id=False
+        )
 
         product = CheckProduct(product_code)
         check_product = product.check()
@@ -145,7 +151,12 @@ class ProductView(ProductsView):
         return context
 
 
-class MyProductsView(LoginRequiredMixin, ProductFormView, UserFormView):
+class MyProductsView(
+    LoginRequiredMixin,
+    TemplateView,
+    ProductFormContext,
+    UserFormContext
+):
     """View to show searched products"""
 
     template_name = "products/my_products.html"
@@ -178,7 +189,7 @@ class DeleteView(LoginRequiredMixin, FormView):
 
     template_name = "products/delete.html"
     form_class = DeleteForm
-    success_url = "products/my_products/"
+    success_url = "/products/my_products/"
 
     def form_valid(self, form):
 
