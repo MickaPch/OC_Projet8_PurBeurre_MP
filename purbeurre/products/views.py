@@ -1,8 +1,10 @@
 import requests
 import os
 
-from django.shortcuts import render, redirect
-from django.views.generic import TemplateView
+from urllib.parse import urlencode
+
+from django.shortcuts import render, redirect, reverse
+from django.views.generic import TemplateView, View, FormView
 from django.db.models import Q, Count
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -19,282 +21,167 @@ from products.models import (
     ProdStore,
     UserSave
 )
-from products.forms import SearchForm, ProductForm
-from user.forms import ConnectionForm
+from products.forms import SearchForm, SaveForm, DeleteForm
+from user.views import UserFormView
+from products.queries import GetProductsQueryTool, CheckProduct, UserProducts
 
 
-class ProductsView(TemplateView):
-    """View to show searched products"""
+class ProductFormView(TemplateView):
 
-    template_name = "/"
-
-    @csrf_exempt
-    def get(self, request, **kwargs):
-
-        search_form = SearchForm(
-            request.GET,
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_form'] = SearchForm(
             auto_id=False
         )
-        product_form = ProductForm(auto_id=False)
-        form_user = ConnectionForm()
+        return context
+
+
+class SearchFormRedirect(View):
+    """Search for products in database"""
+
+    def post(self, request, **kwargs):
+
+        search_form = SearchForm(
+            request.POST,
+            auto_id=False
+        )
 
         if search_form.is_valid():
             search = search_form.cleaned_data['product_search']
-            search_type = search_form.cleaned_data['type']
-            product = ProductView.get_product(self, search)
-            if search_type in ['search', 'product']:
-                if (
-                    product is not None
-                    or search_type == 'product'
-                ):
-                    # Redirect to ProductView
-                    get_product = "".join([
-                        'http://',
-                        request.META['HTTP_HOST'].strip(),
-                        '/product/'
-                    ])
-                    url_product = requests.get(
-                        get_product,
-                        params={
-                            'product_code': search
-                        }
-                    ).url
-
-                    return redirect(url_product)
-                else:
-                    products_by_category = self.get_products_by_category(search)
-                    products_by_brand = self.get_products_by_brand(search)
-                    products_by_store = self.get_products_by_store(search)
-                    products_by_name = self.get_products_by_name(search)
-                    products = products_by_name.union(
-                        products_by_category,
-                        products_by_brand,
-                        products_by_store
-                    ).distinct()
-            elif search_type == 'brand':
-                products = self.get_products_by_brand(search)
-            elif search_type == 'category':
-                products = self.get_products_by_category(search)
-            elif search_type == 'store':
-                products = self.get_products_by_store(search)
-
-            if request.user.is_authenticated:
-                user_products = MyProductsView.get_user_products(self, request.user)
-
-            return render(request, 'products/search.html', locals())
-
+            product = CheckProduct(search).check()
+            if product is not None:
+                return redirect(f'/products/product/{search}/')
+            else:
+                return redirect(f'/products/search/{search}/')
         else:
             return redirect('/')
 
-    def get_products_by_brand(self, search):
-        """Return products find by brand"""
-        prodbrand_results = ProdBrand.objects.filter(
-            brand__name__icontains=search
-        )
-        products = Products.objects.filter(
-            prodbrand__in=prodbrand_results
-        ).distinct()
 
-        return products
-
-    def get_products_by_category(self, search):
-        """Return products find by category"""
-        prodcat_results = ProdCat.objects.filter(
-            Q(category__name__icontains=search)
-            | Q(category__name_fr__icontains=search)
-        )
-        products = Products.objects.filter(
-            prodcat__in=prodcat_results
-        ).distinct()
-
-        return products
-
-    def get_products_by_store(self, search):
-        """Return products find by store"""
-        prodstore_results = ProdStore.objects.filter(
-            store__name__icontains=search
-        )
-        products = Products.objects.filter(
-            prodstore__in=prodstore_results
-        ).distinct()
-
-        return products
-
-    def get_products_by_name(self, search):
-        """Return products find by name"""
-        
-        products = Products.objects.filter(
-            name__icontains=search
-        ).distinct()
-
-        return products
-
-
-class ProductView(TemplateView):
+class ProductsView(ProductFormView, UserFormView):
     """View to show searched products"""
 
-    template_name = "/"
-    
-    @csrf_exempt
-    def get(self, request, **kwargs):
+    template_name = "products/search.html"
 
-        product_form = ProductForm(
-            request.GET,
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+        search = kwargs['search']
+        context['search_form'] = SearchForm(
+            initial={'product_search': search},
             auto_id=False
         )
-        search_form = SearchForm(auto_id=False)
-        form_user = ConnectionForm()
 
-        if product_form.is_valid():
-            code = product_form.cleaned_data['product_code']
-            product = self.get_product(code)
-            if product is not None:
-                brand, brands = self.get_brands(product)
-                stores = self.get_stores(product)
-                categories = self.get_categories(product)
-                alternatives = self.get_alternatives(product)
+        context['search_type'] = 'search'
+        context['products'] = GetProductsQueryTool(search).get_all_products()
 
-                if request.user.is_authenticated:
-                    user_products = MyProductsView.get_user_products(self, request.user)
-
-                return render(request, 'products/product.html', locals())
-
-    def get_product(self, code):
-        """
-        Check if registered product
-        """
-        try:
-            product = Products.objects.get(
-                code=code
-            )
-        except Products.DoesNotExist:
-            product = None
-        
-        return product
-
-    def get_brands(self, product):
-        """Return main and list of all brands of a product"""
-
-        prodbrand_results = ProdBrand.objects.filter(
-            product__code=product.code
-        )
-        brands = [brand.brand.name for brand in prodbrand_results]
-        brand = prodbrand_results[0].brand.name
-
-        return brand, brands
-
-    def get_stores(self, product):
-        """Return list of all stores of a product"""
-
-        prodstore_results = ProdStore.objects.filter(
-            product__code=product.code
-        )
-        stores = [store.store.name for store in prodstore_results]
-
-        return stores
-
-    def get_categories(self, product):
-        """Return list of all categories of a product"""
-        
-        prodcategory_results = ProdCat.objects.filter(
-            product__code=product.code
-        ).exclude(
-            category__name=product.compare_to_category.name
-        )
-        categories = [category.category.name_fr for category in prodcategory_results]
-
-        return categories
+        return context
 
 
-    def get_alternatives(self, product):
-        """Return alternatives of a product and redirect to product page"""
+class BrandView(ProductsView):
+    """View to show searched products"""
 
-        alternatives = Products.objects.filter(
-            compare_to_category=product.compare_to_category,
-            nutriscore__lte=product.nutriscore
-        ).exclude(
-            code=product.code
-        ).distinct().order_by('nutriscore')
+    def get_context_data(self, **kwargs):
 
-        return alternatives
+        context = super().get_context_data(**kwargs)
+        brand = kwargs['search']
 
-class SaveView(LoginRequiredMixin,TemplateView):
+        context['search_type'] = 'brand'
+        context['products'] = GetProductsQueryTool(brand).get_products_by_brand()
+
+        return context
+
+
+class CategoryView(ProductsView):
+    """View to show searched products"""
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+        category = kwargs['search']
+
+        context['search_type'] = 'category'
+        context['products'] = GetProductsQueryTool(category).get_products_by_category()
+
+        return context
+
+
+class StoreView(ProductsView):
+    """View to show searched products"""
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+        store = kwargs['search']
+
+        context['search_type'] = 'store'
+        context['products'] = GetProductsQueryTool(store).get_products_by_store()
+
+        return context
+
+
+class ProductView(ProductsView):
+    """View to show searched products"""
+
+    template_name = "products/product.html"
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+        product_code = kwargs['search']
+
+        product = CheckProduct(product_code)
+        check_product = product.check()
+        if check_product is not None:
+            context['product'] = check_product
+            context['brand'], context['brands'] = product.get_brands()
+            context['stores'] = product.get_stores()
+            context['categories'] = product.get_categories()
+            context['alternatives'] = product.get_alternatives()
+
+        if self.request.user.is_authenticated:
+            user_products = UserProducts(self.request.user)
+            context['user_products'] = user_products.get_user_products()
+
+        return context
+
+
+class MyProductsView(LoginRequiredMixin, ProductFormView, UserFormView):
+    """View to show searched products"""
+
+    template_name = "products/my_products.html"
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+        user_products = UserProducts(self.request.user)
+        context['products'] = user_products.get_user_products()
+
+        return context
+
+
+class SaveView(LoginRequiredMixin, FormView):
     """Save selected products"""
 
-    template_name = "/"
+    template_name = "products/save.html"
+    form_class = SaveForm
+    success_url = "/products/my_products/"
 
-    def post(self, request, **kwargs):
+    def form_valid(self, form):
 
-        products_to_save = request.POST['products_to_save']
-        search_form = SearchForm(auto_id=False)
-        form_user = ConnectionForm()
+        form.save_products(self.request.user)
 
-        try:
-            new_products = products_to_save.split(',')
-            for product_code in new_products:
-                product_object = Products.objects.get(
-                    code=product_code
-                )
-                product, new_product = UserSave.objects.get_or_create(
-                    user=request.user,
-                    product=product_object
-                )
-                if not new_product:
-                    product.save()
-            return redirect('my_products')
-        except:
-            return redirect(request.META.get('HTTP_REFERER'))
+        return super().form_valid(form)
 
-class DeleteView(LoginRequiredMixin,TemplateView):
+
+class DeleteView(LoginRequiredMixin, FormView):
     """Delete selected products"""
 
-    template_name = "/"
+    template_name = "products/delete.html"
+    form_class = DeleteForm
+    success_url = "products/my_products/"
 
-    def post(self, request, **kwargs):
+    def form_valid(self, form):
 
-        products_to_delete = request.POST['products_to_delete']
-        search_form = SearchForm(auto_id=False)
-        form_user = ConnectionForm()
+        form.delete_products(self.request.user)
 
-        try:
-            new_products = products_to_delete.split(',')
-            for product_code in new_products:
-                product_object = Products.objects.get(
-                    code=product_code
-                )
-                UserSave.objects.filter(
-                    user=request.user,
-                    product=product_object
-                ).delete()
-            return redirect('my_products')
-        except:
-            return redirect(request.META.get('HTTP_REFERER'))
-
-class MyProductsView(LoginRequiredMixin, TemplateView):
-    """View to show searched products"""
-
-    template_name = "/"
-
-    def get(self, request, **kwargs):
-
-        product_form = ProductForm(
-            request.GET,
-            auto_id=False
-        )
-        search_form = SearchForm(auto_id=False)
-        form_user = ConnectionForm()
-        products = self.get_user_products(request.user)
-
-        return render(request, 'products/my_products.html', locals())
-
-    def get_user_products(self, user):
-        """Return user registered products"""
-
-        user_products = UserSave.objects.filter(
-            user=user
-        )
-        products = Products.objects.filter(
-            usersave__in=user_products
-        ).distinct().order_by('nutriscore')
-
-        return products
+        return super().form_valid(form)

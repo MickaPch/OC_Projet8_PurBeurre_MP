@@ -24,6 +24,15 @@ from .models import User, Newsletter
 from .validators import validate_username, UsernameValidator
 
 
+
+class UserFormView(TemplateView):
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form_user'] = ConnectionForm()
+        return context
+
+
 class LoginView(TemplateView):
     """View to login User"""
 

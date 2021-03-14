@@ -20,43 +20,6 @@ $('#show_product_infos').click(function() {
     }
 });
 
-$(".brand-link").click(function(e) {
-    e.preventDefault()
-    var brand_link = $(this);
-    var form = $(this).find('form');
-    var brand = $(this).find('.brand').val();
-    var search_input = form.find('input[name="product_search"]');
-    search_input.val(brand);
-    var type_input = form.find('input[name="type"]');
-    type_input.val("brand");
-    form.submit()
-});
-
-$(".store-link").click(function(e) {
-    e.preventDefault()
-    var store_link = $(this);
-    var form = $(this).find('form');
-    var store = $(this).find('.store').val();
-    var search_input = form.find('input[name="product_search"]');
-    search_input.val(store);
-    var type_input = form.find('input[name="type"]');
-    type_input.val("store");
-    form.submit()
-});
-
-
-$(".category-link").click(function(e) {
-    e.preventDefault()
-    var category_link = $(this);
-    var form = $(this).find('form');
-    var category = $(this).find('.category').val();
-    var search_input = form.find('input[name="product_search"]');
-    search_input.val(category);
-    var type_input = form.find('input[name="type"]');
-    type_input.val("category");
-    form.submit()
-});
-
 var selected_products = new Object();
 var selected_type = new String();
 

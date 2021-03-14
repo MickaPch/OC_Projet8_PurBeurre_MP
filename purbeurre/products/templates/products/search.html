@@ -94,32 +94,30 @@
                 {% for product in products %}
                     <div class="col-12 col-md-6 col-lg-4 mb-2">
                         <div class="row product-page align-items-center justify-content-center"> {# py-3 #}
-                            <form action="{% url 'product' %}" method="get">
-                                <a type="button" class="col product product-link">
-                                    <div class="row product-img-nutriscore justify-content-center">
-                                        <img src="{{product.image_url}}" class="product-img"/>
-                                        {% if product in user_products %}
-                                            <div class="product-checkbox-link">
-                                                <div class="product-checkbox"></div>
-                                                <div class="checkbox-deselected select-checkbox checkbox-registered"></div>
-                                            </div>
-                                        {% endif %}
-                                        <div class="product-nutriscore-badge">
-                                            <div class="nutriscore-text">NUTRI-SCORE</div>
-                                            <div class="nutriscore-badge">
-                                                <div class="nutriscore nutriscore-a {% if product.nutriscore == 'A' %}nutriscore-active{% endif %}">A</div><!--
-                                            --><div class="nutriscore nutriscore-b {% if product.nutriscore == 'B' %}nutriscore-active{% endif %}">B</div><!--
-                                            --><div class="nutriscore nutriscore-c {% if product.nutriscore == 'C' %}nutriscore-active{% endif %}">C</div><!--
-                                            --><div class="nutriscore nutriscore-d {% if product.nutriscore == 'D' %}nutriscore-active{% endif %}">D</div><!--
-                                            --><div class="nutriscore nutriscore-e {% if product.nutriscore == 'E' %}nutriscore-active{% endif %}">E</div>
-                                                </div>
+                            <a class="col product product-link" href="{% url 'product' product.code %}">
+                                <div class="row product-img-nutriscore justify-content-center">
+                                    <img src="{{product.image_url}}" class="product-img"/>
+                                    {% if product in user_products %}
+                                        <div class="product-checkbox-link">
+                                            <div class="product-checkbox"></div>
+                                            <div class="checkbox-deselected select-checkbox checkbox-registered"></div>
                                         </div>
+                                    {% endif %}
+                                    <div class="product-nutriscore-badge">
+                                        <div class="nutriscore-text">NUTRI-SCORE</div>
+                                        <div class="nutriscore-badge">
+                                            <div class="nutriscore nutriscore-a {% if product.nutriscore == 'A' %}nutriscore-active{% endif %}">A</div><!--
+                                        --><div class="nutriscore nutriscore-b {% if product.nutriscore == 'B' %}nutriscore-active{% endif %}">B</div><!--
+                                        --><div class="nutriscore nutriscore-c {% if product.nutriscore == 'C' %}nutriscore-active{% endif %}">C</div><!--
+                                        --><div class="nutriscore nutriscore-d {% if product.nutriscore == 'D' %}nutriscore-active{% endif %}">D</div><!--
+                                        --><div class="nutriscore nutriscore-e {% if product.nutriscore == 'E' %}nutriscore-active{% endif %}">E</div>
+                                            </div>
                                     </div>
-                                    <div class="row product-name justify-content-center">{{product.name}}</div>
-                                    <input type="hidden" class="code" value="{{product.code}}" disabled>
-                                    {{product_form.product_code.as_hidden}}
-                                </a>
-                            </form>
+                                </div>
+                                <div class="row product-name justify-content-center">{{product.name}}</div>
+                                <input type="hidden" class="code" value="{{product.code}}" disabled>
+                                {{product_form.product_code.as_hidden}}
+                            </a>
                         </div>
                     </div>
                 {% endfor %}

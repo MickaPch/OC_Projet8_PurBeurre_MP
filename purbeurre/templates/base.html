@@ -46,9 +46,9 @@
                 <div class="collapse navbar-collapse flex-md-column justify-content-end" id="navbarResponsive">
                     <ul class="navbar-nav ml-auto my-2 my-lg-0 d-lg-flex align-items-center">
                         <li class="nav-item">
-                            <form id="searchbar" action="{% url 'search' %}" method="get">
+                            <form id="searchbar" action="{% url 'search' %}" method="post">
+                                {% csrf_token %}
                                 {{ search_form.product_search }}
-                                {{ search_form.type.as_hidden }}
                             </form>
                         </li>
                         {% if user.is_authenticated %}

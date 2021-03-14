@@ -6,16 +6,13 @@ from products.models import (
     ProdBrand
 )
 from products import validators
+from products.models import Products, UserSave
+
 
 class SearchForm(forms.Form):
     """Product search form"""
     product_search = forms.CharField(
         max_length=100
-    )
-    type = forms.CharField(
-        max_length=100,
-        initial='search',
-        validators=[validators.validate_search_type]
     )
 
     product_search.widget.attrs.update(
@@ -24,15 +21,41 @@ class SearchForm(forms.Form):
             'placeholder': 'Chercher un produit'
         }
     )
-    type.widget.attrs.update(
-        {
-            'class': 'input-type'
-        }
-    )
 
-class ProductForm(forms.Form):
-    """Product form"""
+class SaveForm(forms.Form):
+    """Save form"""
 
-    product_code = forms.CharField(
-        max_length=100
-    )
+    products_to_save = forms.TextInput()
+
+    def save_products(self, user):
+        """Save products if valid form"""
+
+        new_products = self.data.get('products_to_save').split(',')
+        for product_code in new_products:
+            product_object = Products.objects.get(
+                code=product_code
+            )
+            product, new_product = UserSave.objects.get_or_create(
+                user=user,
+                product=product_object
+            )
+            if not new_product:
+                product.save()
+
+class DeleteForm(forms.Form):
+    """Delete form"""
+
+    products_to_delete = forms.TextInput()
+
+    def delete_products(self, user):
+        """Delete products if valid form"""
+
+        new_products = self.data.get('products_to_delete').split(',')
+        for product_code in new_products:
+            product_object = Products.objects.get(
+                code=product_code
+            )
+            UserSave.objects.filter(
+                user=request.user,
+                product=product_object
+            ).delete()

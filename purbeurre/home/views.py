@@ -3,39 +3,24 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 
-from user.forms import ConnectionForm
-from products.forms import SearchForm
+from user.views import UserFormView
+from products.views import ProductFormView
 
 
-class HomeView(TemplateView):
+class HomeView(ProductFormView, UserFormView):
     """View to show searched products"""
 
-    template_name = "/"
+    template_name = "home/home.html"
 
-    @csrf_exempt
-    def get(self, request, **kwargs):
-        """Home page"""
-        search_form = SearchForm(
-            auto_id=False,
-            initial={
-                'product_search': "",
-                'type': 'search'
-            }
-        )
-        form_user = ConnectionForm()
-
-        return render(request, 'home/home.html', locals())
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
 
 
-def legal_notice(request):
-    """Legal Notice"""
-    search_form = SearchForm(
-        auto_id=False,
-        initial={
-            'product_search': "",
-            'type': 'search'
-        }
-    )
-    form_user = ConnectionForm()
+class LegalNoticeView(ProductFormView, UserFormView):
 
-    return render(request, 'home/legal_notice.html', locals())
+    template_name = 'home/legal_notice.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context

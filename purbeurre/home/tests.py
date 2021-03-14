@@ -2,6 +2,7 @@
 from django.apps import apps
 from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import AnonymousUser
+from unittest.mock import patch
 
 from home.apps import HomeConfig
 
@@ -20,17 +21,36 @@ class HomeConfigTest(TestCase):
             'home'
         )
 
-class HomeViewTest(TestCase):
+class HomeViewTests(TestCase):
     """Testing home view"""
 
-    def setUp(self):
-        self.factory = RequestFactory()
-
-    def test_home_view(self):
+    @patch('home.views.SearchForm')
+    @patch('home.views.ConnectionForm')
+    def test_home_view(self, MockConnectionForm, MockSearchForm):
         """Test get user home"""
+        MockConnectionForm.assert_not_called()
+        MockSearchForm.assert_not_called()
 
-        response = self.client.get(
+        self.client.get(
             '/'
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed('home.html')
+
+        MockConnectionForm.assert_called_once()
+        MockSearchForm.assert_called_once()
+
+    @patch('home.views.SearchForm')
+    @patch('home.views.ConnectionForm')
+    def test_legals(self, MockConnectionForm, MockSearchForm):
+        """Test legals page"""
+
+        MockConnectionForm.assert_not_called()
+        MockSearchForm.assert_not_called()
+
+        self.client.get('/legal_notice/')
+
+        self.assertTemplateUsed('legal_notice.html')
+
+        MockConnectionForm.assert_called_once()
+        MockSearchForm.assert_called_once()

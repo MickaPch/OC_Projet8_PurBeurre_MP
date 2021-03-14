@@ -21,11 +21,11 @@
                         Trouvez un produit de subsitution pour ceux que vous consommez tous les jours.
                     </h2>
                     <!-- Product homepage search form-->
-                    <form id="home_product_search" action="{% url 'search' %}" method="get">
+                    <form id="home_product_search" action="{% url 'search' %}" method="post">
                         <div class="form-row">
                             <div class="col-9 pr-0">
+                                {% csrf_token %}
                                 {{search_form.product_search}}
-                                {{search_form.type.as_hidden}}
                             </div>
                             <div class="col-3 text-left pl-0">
                                 <button

@@ -85,7 +85,7 @@ def initiate_test_db():
 class ProductsConfigTest(TestCase):
     """Testing products app"""
 
-    def test_app_(self):
+    def test_app_products(self):
         """Test app name"""
         self.assertEqual(
             ProductsConfig.name,
@@ -98,11 +98,26 @@ class ProductsConfigTest(TestCase):
 
 class ProductsViewTest(LiveServerTestCase):
     """Testing products view"""
-    def setUp(self):
-        initiate_test_db()
+    fixtures = ['users.json', 'products.json']
 
-    def test_products_view(self):
-        """Test products post / all search types"""
+    @patch('products.views.SearchForm.is_valid', spec=True)
+    def test_get_products_invalid_search_form(self, MockSearchForm):
+        MockSearchForm.return_value = False
+        self.client.get(
+            '/search/',
+            {
+                'product_search': 'test',
+                'type': 'search'
+            },
+            follow=True
+        )
+        self.assertTemplateUsed('home.html')
+
+    @patch('products.views.ProductView')
+    @patch('products.views.SearchForm')
+    def test_get_products_valid_search_form(self, MockSearchForm, MockProductView):
+        MockSearchForm.is_valid.return_value = True
+        MockProductView.get_product.return_value = None
         types = [
             'search',
             'brand',
@@ -119,67 +134,58 @@ class ProductsViewTest(LiveServerTestCase):
                 'product_search': 'test',
                 'type': search_type
             }
-            response = self.client.get(
+            MockSearchForm.return_value.cleaned_data = search_form
+            self.client.get(
                 '/search/',
                 search_form,
                 follow=True
             )
-            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed('search.html')
 
-    def test_products_form_invalid_view(self):
-        """Test products post / invalid_form"""
-        search_form = {
+    @patch('products.views.ProductView')
+    @patch('products.views.SearchForm')
+    def test_get_products_redirect_product(self, MockSearchForm, MockProductView):
+        MockSearchForm.is_valid.return_value = True
+        MockProductView.get_product.return_value = 'test'
+        MockSearchForm.return_value.cleaned_data = {
             'product_search': 'test',
-            'type': 'wrong_type'
-        }
-        response = self.client.get(
-            '/search/',
-            search_form,
-            follow=True
-        )
-        self.assertEqual(response.status_code, 200)
-
-    def test_products_by_code_view(self):
-        """Test products post / product_code"""
-
-        search_form = {
-            'product_search': '123456789',
             'type': 'search'
         }
-        host_url = str(self.live_server_url).replace('http://', '')
-        client = Client(
-            HTTP_HOST=host_url
-        )
 
-        response = client.get(
+        self.client.get(
             '/search/',
-            search_form
+            {
+                'product_search': 'test',
+                'type': 'search'
+            },
+            follow=True
         )
-        self.assertEqual(response.status_code, 302)
+        # Unexistant product --> redirect home
+        self.assertTemplateUsed('home.html')
+
 
 class ProductViewTest(TestCase):
     """Testing product view"""
 
-    def setUp(self):
-        initiate_test_db()
-        self.product_form = {
-            'product_code': '123456789'
-        }
-        self.client.login(
-            username='foo@example.com',
-            password='admin'
-        )
-
+    fixtures = ['users.json', 'products.json']
 
     def test_get_product(self):
         """Test get a product"""
 
-        response = self.client.get(
+        login_user = self.client.login(
+            username='foo@example.com',
+            password='admin'
+        )
+        self.assertEqual(login_user, True)
+
+        self.client.get(
             '/product/',
-            self.product_form,
+            {
+                'product_code': '3017620422003'
+            },
             follow=True
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed('product.html')
 
 class SaveViewTest(TestCase):
     """"""
@@ -330,114 +336,7 @@ class UserProductsViewTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-class IntegrationTest(TestCase):
-    """
-    Integration Test
-    1. Get homepage
-    2. Login user
-    3. Search product
-    4. Access product page
-    5. Save product
-    6. Logout user
-    """
-
-    fixtures = [
-        'users.json',
-        'products.json',
-    ]
-
-    def setUp(self):
-        self.client = Client()
-        self.product_form = {
-            'product_code': '3017620422003'
-        }
-        self.product_save = {
-            'products_to_save': '3017620422003'
-        }
-
-    def test_integration(self):
-        """Integration tests"""
-
-        self.get_home()
-        self.login_user()
-        self.search_product()
-        self.product_page()
-        self.save_product()
-        self.logout_user()
-
-    def get_home(self):
-        """Get home page"""
-
-        response = self.client.get('/')
-        self.assertTemplateUsed(template_name='home/home.html')
-        self.assertEqual(response.status_code, 200)
-
-    def login_user(self):
-        """Login user"""
-        response = self.client.login(
-            username='foo@example.com',
-            password='admin'
-        )
-        self.assertEqual(response, True)
-
-    def search_product(self):
-        """Search product"""
-        search_form = {
-            'product_search': 'nutella',
-            'type': 'search'
-        }
-        response = self.client.get(
-            '/search/',
-            search_form,
-            follow=True
-        )
-        self.assertTemplateUsed(template_name='products/search.html')
-        self.assertEqual(response.status_code, 200)
-
-    def product_page(self):
-        """Product page"""
-        response = self.client.get(
-            '/product/',
-            self.product_form,
-            follow=True
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(template_name='products/product.html')
-
-    def save_product(self):
-        response = self.client.post(
-            '/save/',
-            self.product_save
-        )
-        user = User.objects.get(email='foo@example.com')
-        product_saved = Products.objects.get(
-            code=self.product_save['products_to_save']
-        )
-        save_count = UserSave.objects.filter(
-            product=product_saved,
-            user=user
-        ).count()
-        self.assertEqual(save_count, 1)
-        self.assertEqual(response.status_code, 302)
-        self.assertTemplateUsed(template_name='products/my_products.html')
-
-    def logout_user(self):
-        user = {
-            'connect-user_login': 'foo@example.com',
-            'connect-pwd': 'admin'
-        }
-        response = self.client.get(
-            '/user/logout/',
-            user,
-            follow=True
-        )
-
-        self.assertEqual(
-            response.context['user'].is_authenticated,
-            False
-        )
-
-class MockTest(TestCase):
+class ImportTest(TestCase):
 
     @patch('products.management.commands.classes.requests')
     def test_mock_import_categories(self, mock_requests):
