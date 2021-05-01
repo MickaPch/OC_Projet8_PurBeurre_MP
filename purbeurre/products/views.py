@@ -1,33 +1,16 @@
-import requests
-import os
-
-from urllib.parse import urlencode
-
-from django.shortcuts import render, redirect, reverse
+"""Products views"""
+from django.shortcuts import redirect
 from django.views.generic import TemplateView, View, FormView
 from django.views.generic.base import ContextMixin
-from django.db.models import Q, Count
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.sites.shortcuts import get_current_site
-from django.views.decorators.csrf import csrf_exempt
 
-from products.models import (
-    Products,
-    Categories,
-    ProdCat,
-    Brands,
-    ProdBrand,
-    Stores,
-    ProdStore,
-    UserSave
-)
 from products.forms import SearchForm, SaveForm, DeleteForm
-from user.views import UserFormContext
 from products.queries import GetProductsQueryTool, CheckProduct, UserProducts
+from user.views import UserFormContext
 
 
 class ProductFormContext(ContextMixin):
+    """Product search form"""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -41,6 +24,7 @@ class SearchFormRedirect(View):
     """Search for products in database"""
 
     def post(self, request, **kwargs):
+        """Search product in database from HTML POST"""
 
         search_form = SearchForm(
             request.POST,
@@ -49,8 +33,8 @@ class SearchFormRedirect(View):
 
         if search_form.is_valid():
             search = search_form.cleaned_data['product_search']
-            product = CheckProduct(search).check()
-            if product is not None:
+            check_product = CheckProduct(search)
+            if check_product.product is not None:
                 return redirect(f'/products/product/{search}/')
             else:
                 return redirect(f'/products/search/{search}/')
@@ -58,7 +42,7 @@ class SearchFormRedirect(View):
             return redirect('/')
 
 
-class ProductsView(TemplateView, ProductFormContext, UserFormContext):
+class ProductsViews(TemplateView, ProductFormContext, UserFormContext):
     """View to show searched products"""
 
     template_name = "products/search.html"
@@ -71,14 +55,24 @@ class ProductsView(TemplateView, ProductFormContext, UserFormContext):
             initial={'product_search': search},
             auto_id=False
         )
+        return context
+
+class AllProductsView(ProductsViews):
+    """View to show searched products"""
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+        search = kwargs['search']
 
         context['search_type'] = 'search'
-        context['products'] = GetProductsQueryTool(search).get_all_products()
+        products_querytool = GetProductsQueryTool(search)
+        context['products'] = products_querytool.get_all_products()
 
         return context
 
 
-class BrandView(ProductsView):
+class BrandView(ProductsViews):
     """View to show searched products"""
 
     def get_context_data(self, **kwargs):
@@ -87,12 +81,13 @@ class BrandView(ProductsView):
         brand = kwargs['search']
 
         context['search_type'] = 'brand'
-        context['products'] = GetProductsQueryTool(brand).get_products_by_brand()
+        products_querytool = GetProductsQueryTool(brand)
+        context['products'] = products_querytool.get_products_by_brand()
 
         return context
 
 
-class CategoryView(ProductsView):
+class CategoryView(ProductsViews):
     """View to show searched products"""
 
     def get_context_data(self, **kwargs):
@@ -101,12 +96,13 @@ class CategoryView(ProductsView):
         category = kwargs['search']
 
         context['search_type'] = 'category'
-        context['products'] = GetProductsQueryTool(category).get_products_by_category()
+        products_querytool = GetProductsQueryTool(category)
+        context['products'] = products_querytool.get_products_by_category()
 
         return context
 
 
-class StoreView(ProductsView):
+class StoreView(ProductsViews):
     """View to show searched products"""
 
     def get_context_data(self, **kwargs):
@@ -115,7 +111,8 @@ class StoreView(ProductsView):
         store = kwargs['search']
 
         context['search_type'] = 'store'
-        context['products'] = GetProductsQueryTool(store).get_products_by_store()
+        products_querytool = GetProductsQueryTool(store)
+        context['products'] = products_querytool.get_products_by_store()
 
         return context
 
@@ -135,14 +132,13 @@ class ProductView(TemplateView, ProductFormContext, UserFormContext):
             auto_id=False
         )
 
-        product = CheckProduct(product_code)
-        check_product = product.check()
-        if check_product is not None:
-            context['product'] = check_product
-            context['brand'], context['brands'] = product.get_brands()
-            context['stores'] = product.get_stores()
-            context['categories'] = product.get_categories()
-            context['alternatives'] = product.get_alternatives()
+        check_product = CheckProduct(product_code)
+        if check_product.product is not None:
+            context['product'] = check_product.product
+            context['brand'], context['brands'] = check_product.get_brands()
+            context['stores'] = check_product.get_stores()
+            context['categories'] = check_product.get_categories()
+            context['alternatives'] = check_product.get_alternatives()
 
         if self.request.user.is_authenticated:
             user_products = UserProducts(self.request.user)

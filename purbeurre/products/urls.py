@@ -1,10 +1,10 @@
-from django.urls import path, include
-from django.contrib.auth import views as auth_views
+"""Products urls"""
+from django.urls import path
 from . import views
 
 urlpatterns = [
     path('search', views.SearchFormRedirect.as_view(), name="search"),
-    path('search/<str:search>/', views.ProductsView.as_view(), name="products_search"),
+    path('search/<str:search>/', views.AllProductsView.as_view(), name="products_search"),
     path('brand/<str:search>/', views.BrandView.as_view(), name="brand_search"),
     path('category/<str:search>/', views.CategoryView.as_view(), name="category_search"),
     path('store/<str:search>/', views.StoreView.as_view(), name="store_search"),

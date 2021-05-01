@@ -8,7 +8,9 @@ from django.test.testcases import QuietWSGIRequestHandler, LiveServerThread
 
 
 class ConnectionResetErrorSwallowingQuietWSGIRequestHandler(QuietWSGIRequestHandler):
+    """ConnectionResetErrorSwallowingQuietWSGIRequestHandler"""
     def handle_one_request(self):
+        """handle_one_request"""
         try:
             super().handle_one_request()
         except socket.error as err:
@@ -17,5 +19,11 @@ class ConnectionResetErrorSwallowingQuietWSGIRequestHandler(QuietWSGIRequestHand
 
 
 class ConnectionResetErrorSwallowingLiveServerThread(LiveServerThread):
+    """ConnectionResetErrorSwallowingLiveServerThread"""
     def _create_server(self):
-        return ThreadedWSGIServer((self.host, self.port), ConnectionResetErrorSwallowingQuietWSGIRequestHandler, allow_reuse_address=False)
+        """_create_server"""
+        return ThreadedWSGIServer(
+            (self.host, self.port),
+            ConnectionResetErrorSwallowingQuietWSGIRequestHandler,
+            allow_reuse_address=False
+        )

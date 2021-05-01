@@ -1,32 +1,25 @@
 """User"""
-from django import forms
-from django.conf import settings
+import json
+
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.password_validation import validate_password
-from django.contrib.auth.validators import UnicodeUsernameValidator, ASCIIUsernameValidator
-from django.core.validators import validate_email, validate_slug
+from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
-from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic import TemplateView
 from django.views.generic.base import ContextMixin
 from django.views.decorators.csrf import csrf_exempt
 
-import json
-import os
-
-from .backends import AuthenticateBackend
 from .forms import ConnectionForm, NewForm
-from .models import User, Newsletter
-from .validators import validate_username, UsernameValidator
-
+from .models import User
+from .validators import validate_username
 
 
 class UserFormContext(ContextMixin):
+    """User form"""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -40,8 +33,9 @@ class LoginView(TemplateView):
     template_name = "/"
 
     form_user = ConnectionForm()
-    
+
     def post(self, request, **kwargs):
+        """User login from HTML form"""
 
         user_login = request.POST.get('connect-user_login', False)
         password = request.POST.get('connect-pwd', False)
@@ -80,7 +74,13 @@ class UserAccountView(LoginRequiredMixin, TemplateView):
 
         form_user = ConnectionForm()
 
-        return render(request, 'user/user.html', locals())
+        return render(
+            request,
+            'user/user.html',
+            {
+                "form_user": form_user
+            }
+        )
 
 
 class NewAccountView(TemplateView):
@@ -94,8 +94,15 @@ class NewAccountView(TemplateView):
         form_new = NewForm()
         form_user = ConnectionForm()
 
-        return render(request, 'user/new_account.html', locals())
-    
+        return render(
+            request,
+            'user/new_account.html',
+            {
+                "form_new": form_new,
+                "form_user": form_user
+            }
+        )
+
     def post(self, request, **kwargs):
         """Register new user and redirect to user account"""
 
@@ -111,7 +118,7 @@ class NewAccountView(TemplateView):
                     user_login = email
                 firstname = form_new.cleaned_data["firstname"]
                 lastname = form_new.cleaned_data["lastname"]
-                newsletter = form_new.cleaned_data["newsletter"]
+                # newsletter = form_new.cleaned_data["newsletter"]
                 user = User.objects.create_user(
                     email,
                     password=pwd,
@@ -121,18 +128,6 @@ class NewAccountView(TemplateView):
                 )
                 user.save()
                 data['ok'] = True
-                # try:
-                #     #####################################################
-                #     # !!! NEWSLETTER
-                #     #####################################################
-                #     user_newsletter = Newsletter.objects.update_or_create(
-                #         user,
-                #         newsletter
-                #     )
-                #     print('Newsletter OK')
-                #     print(user_newsletter)
-                # except:
-                #     data['ok'] = False
             else:
                 data['email'] = False
         else:
@@ -169,6 +164,7 @@ class CheckLoginView(TemplateView):
 
     @csrf_exempt
     def post(self, request, **kwargs):
+        """Login user from HTML form"""
         user_login = request.POST.get("user_login")
 
         if User.objects.filter(username=user_login).exists():
@@ -190,13 +186,14 @@ class CheckEmailView(TemplateView):
 
     @csrf_exempt
     def post(self, request, **kwargs):
+        """Retrieve email from HTML form"""
         email = request.POST.get('email')
 
         if self.check_email(email):
             return HttpResponse("email ok")
         else:
             return HttpResponse("email nok")
-    
+
     def check_email(self, email, check_available=False):
         """Email check usable out of view"""
         if check_available:
@@ -224,6 +221,7 @@ class CheckPwdView(TemplateView):
 
     @csrf_exempt
     def post(self, request, **kwargs):
+        """Retrieve password from HTML form"""
         pwd = request.POST.get("pwd")
 
         try:

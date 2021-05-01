@@ -1,5 +1,5 @@
-from django.urls import path, include
-from django.contrib.auth import views as auth_views
+"""User urls"""
+from django.urls import path
 from . import views
 
 urlpatterns = [

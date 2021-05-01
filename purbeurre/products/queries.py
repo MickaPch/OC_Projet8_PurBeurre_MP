@@ -1,3 +1,4 @@
+"""Products database queries"""
 from django.db.models import Q
 from products.models import ProdBrand, ProdCat, ProdStore, Products, UserSave
 
@@ -68,22 +69,24 @@ class GetProductsQueryTool():
         return products
 
 class CheckProduct():
+    """Check if registered product in database"""
 
     def __init__(self, code):
         self.code = code
+        self.product = self.check()
 
     def check(self):
         """
         Check if registered product
         """
         try:
-            self.product = Products.objects.get(
+            product = Products.objects.get(
                 code=self.code
             )
         except Products.DoesNotExist:
-            self.product = None
-        
-        return self.product
+            product = None
+
+        return product
 
     def get_brands(self):
         """Return main and list of all brands of a product"""
@@ -108,11 +111,11 @@ class CheckProduct():
 
     def get_categories(self):
         """Return list of all categories of a product"""
-        
+
         prodcategory_results = ProdCat.objects.filter(
             product__code=self.code
         ).exclude(
-            category__name=self.product.compare_to_category.name
+            category__name=Products.objects.get(code=self.code).compare_to_category.name
         )
         categories = {}
         for category in prodcategory_results:
@@ -134,6 +137,7 @@ class CheckProduct():
 
 
 class UserProducts():
+    """Return user registered products"""
 
     def __init__(self, user):
         self.user = user
@@ -149,4 +153,3 @@ class UserProducts():
         ).distinct().order_by('nutriscore')
 
         return products
-

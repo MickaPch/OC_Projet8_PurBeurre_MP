@@ -446,7 +446,7 @@ class CheckPwdViewTest(TestCase):
         error_msgs = [
             'This password must contain at least one capital.',
             'This password must contain at least one digit.',
-            'This password must contain at least one special character.',
+            'This password must contain at least one special caracter.',
             'This password is too common'
         ]
         for message in error_msgs:
@@ -466,7 +466,7 @@ class CheckPwdViewTest(TestCase):
         )
         self.assertEqual(
             SpecialCharacterValidator.get_help_text(self),
-            'Your password must contain at least one special character'
+            'Your password must contain at least one special caracter'
         )
 
     def test_good_pwd(self):

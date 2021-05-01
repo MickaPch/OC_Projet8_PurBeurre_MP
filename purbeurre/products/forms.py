@@ -3,10 +3,8 @@ from django import forms
 
 from products.models import (
     Products,
-    ProdBrand
+    UserSave
 )
-from products import validators
-from products.models import Products, UserSave
 
 
 class SearchForm(forms.Form):
@@ -50,12 +48,12 @@ class DeleteForm(forms.Form):
     def delete_products(self, user):
         """Delete products if valid form"""
 
-        new_products = self.data.get('products_to_delete').split(',')
-        for product_code in new_products:
+        products = self.data.get('products_to_delete').split(',')
+        for product_code in products:
             product_object = Products.objects.get(
                 code=product_code
             )
             UserSave.objects.filter(
-                user=request.user,
+                user=user,
                 product=product_object
             ).delete()

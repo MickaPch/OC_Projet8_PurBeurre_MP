@@ -1,5 +1,6 @@
+"""Products models"""
 from django.db import models
-from user.models import User
+
 
 class Products(models.Model):
     """Products retrieved from OpenFoodFacts"""
@@ -36,6 +37,7 @@ class Categories(models.Model):
     url = models.CharField(max_length=250, null=False)
 
 class RelatedCategories(models.Model):
+    """Related categories"""
     parent = models.ForeignKey(
         'Categories',
         on_delete=models.CASCADE,

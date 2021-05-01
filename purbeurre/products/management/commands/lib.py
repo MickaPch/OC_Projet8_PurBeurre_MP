@@ -1,5 +1,4 @@
-import os
-import json
+"""command methods"""
 import string
 import requests
 
@@ -14,27 +13,35 @@ from products.models import (
     ProdStore
 )
 
+
 class DatabaseCount():
+    """Count lines in database (Heroku limit)"""
     count = 0
-    
+
     def new_entry(self):
+        """+1 line"""
         DatabaseCount.count += 1
 
 class ImportCategories(DatabaseCount):
     """Import categories in DB"""
-    
+
     def __init__(self):
         """Request OpenFoodFacts API and import categories"""
 
-        all_categories = self.request_categories()
+        self.url = "https://fr.openfoodfacts.org/categories.json"
+
+
+    def initiate_db(self):
+        """Initiate database"""
+
+        all_categories = self.request_categories(self.url)
         self.import_categories(all_categories)
         self.all = Categories.objects.all()
 
-    def request_categories(self):
+    def request_categories(self, request_url):
         """Request OpenFoodFacts to retrieve all categories"""
 
-        url_categories = "https://fr.openfoodfacts.org/categories.json"
-        resp = requests.get(url_categories)
+        resp = requests.get(request_url)
 
         return resp.json()
 
@@ -82,6 +89,7 @@ class Category(DatabaseCount):
         self.category = category
 
     def get_products_list(self, pages=1):
+        """Get products list"""
 
         list_products = []
         for i in range(pages):
@@ -108,7 +116,7 @@ class ProductImportation(DatabaseCount):
         "proteins_100g",
         "salt_100g",
         "sodium_100g"
-    ]    
+    ]
     codes = []
     count = 0
 
@@ -132,18 +140,18 @@ class ProductImportation(DatabaseCount):
 
 
         if (
-            product_infos['product_name'] != None
+            product_infos['product_name'] is not None
             and product_infos['product_code'] not in ProductImportation.codes
-            and product_infos['product_code'] != None
-            and product_infos['product_url'] != None
-            and product_infos['image_url'] != None
-            and product_infos['quantity'] != None
-            and product_infos['ingredients'] != None
+            and product_infos['product_code'] is not None
+            and product_infos['product_url'] is not None
+            and product_infos['image_url'] is not None
+            and product_infos['quantity'] is not None
+            and product_infos['ingredients'] is not None
             and product_infos['brands'] != []
             and product_infos['stores'] != []
-            and product_infos['countries'] != None
-            and product_infos['compare_to'] != None
-            and product_infos['categories_hierarchy'] != None
+            and product_infos['countries'] is not None
+            and product_infos['compare_to'] is not None
+            and product_infos['categories_hierarchy'] is not None
             and product_infos['nutriscore'] in abcde
             and all([product_infos[nutriment] >= 0 for nutriment in self.list_nutriments])
             and Categories.objects.filter(name=product_infos['compare_to']).count() > 0
@@ -245,7 +253,9 @@ class ProductImportation(DatabaseCount):
 
         # CATEGORIES HIERARCHY
         try:
-            categories_hierarchy = [category.split(':')[1] for category in self.product['categories_hierarchy']]
+            categories_hierarchy = [
+                category.split(':')[1] for category in self.product['categories_hierarchy']
+            ]
         except KeyError:
             categories_hierarchy = None
 
@@ -404,7 +414,7 @@ class ProductImportation(DatabaseCount):
                     product=self.product_object,
                     brand=brand
                 )
-        
+
         return brands
 
     def import_stores(self):
@@ -437,5 +447,5 @@ class ProductImportation(DatabaseCount):
                     product=self.product_object,
                     store=store
                 )
-        
+
         return stores

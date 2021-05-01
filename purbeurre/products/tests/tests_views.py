@@ -1,10 +1,9 @@
-"""Tests for products app views"""
+"""Tests products views"""
 from django.test import TestCase
-
 from unittest.mock import patch
 
 from products.views import ProductFormContext
-
+from products.models import Products
 
 class ProductFormTest(TestCase):
     """Testing product form view"""
@@ -33,14 +32,16 @@ class ProductFormRedirectTest(TestCase):
     def setUp(self):
         self.product = 'some_product'
 
+    @patch('products.views.CheckProduct')
     @patch('products.views.SearchForm')
-    def test_search_product_form_success(self, MockSearchForm):
+    def test_search_product_form_success(self, MockSearchForm, MockCheckProduct):
         product_form = {'product_search': self.product}
         attrs = {
             'return_value.is_valid.return_value': True,
             'return_value.cleaned_data': product_form
         }
         MockSearchForm.configure_mock(**attrs)
+        MockCheckProduct.return_value.product = None
         response = self.client.post(
             '/products/search',
             product_form
@@ -52,14 +53,16 @@ class ProductFormRedirectTest(TestCase):
             fetch_redirect_response=False
         )
 
+    @patch('products.views.CheckProduct')
     @patch('products.views.SearchForm')
-    def test_search_product_form_redirect_homepage(self, MockSearchForm):
+    def test_search_product_form_redirect_homepage(self, MockSearchForm, MockCheckProduct):
         product_form = {'product_search': self.product}
         attrs = {
             'return_value.is_valid.return_value': False,
             'return_value.cleaned_data': product_form
         }
         MockSearchForm.configure_mock(**attrs)
+        MockCheckProduct.return_value.product = None
         response = self.client.post(
             '/products/search',
             product_form
@@ -80,7 +83,7 @@ class ProductFormRedirectTest(TestCase):
             'return_value.cleaned_data': product_form
         }
         MockSearchForm.configure_mock(**attrs)
-        MockCheckProduct.return_value.check.return_value = object()
+        MockCheckProduct.return_value.product = object()
         response = self.client.post(
             '/products/search',
             product_form
@@ -99,13 +102,28 @@ class ProductsViewTest(TestCase):
     def setUp(self):
         self.product = 'some_product'
 
-    def test_search_products_good_template(self):
+    @patch('products.views.GetProductsQueryTool')
+    @patch('products.views.SearchForm')
+    def test_search_products_good_template(self, MockSearchForm, MockGetProductsQueryTool):
+        MockSearchForm.return_value.is_valid.return_value = True
+        MockSearchForm.return_value.cleaned_data = {
+            'product_search': self.product
+        }
+        MockGetProductsQueryTool.return_value.get_all_products.return_value = Products.objects.all()
         self.client.get(f'/products/search/{self.product}')
 
         self.assertTemplateUsed('products/search.html')
         
-    def test_search_products_good_context(self):
+    @patch('products.views.GetProductsQueryTool')
+    @patch('products.views.SearchForm')
+    def test_search_products_good_context(self, MockSearchForm, MockGetProductsQueryTool):
+        MockSearchForm.return_value.is_valid.return_value = True
+        MockSearchForm.return_value.cleaned_data = {
+            'product_search': self.product
+        }
+        MockGetProductsQueryTool.return_value.get_all_products.return_value = Products.objects.all()
         response = self.client.get(f'/products/search/{self.product}/')
+        MockGetProductsQueryTool.assert_called_with(self.product)
         self.assertIn(
             'search_type',
             response.context
@@ -120,15 +138,30 @@ class BrandViewTest(TestCase):
     """Testing brand view"""
 
     def setUp(self):
-        self.product = 'some_brand'
+        self.brand = 'some_brand'
 
-    def test_search_products_good_template(self):
-        self.client.get(f'/products/brand/{self.product}')
+    @patch('products.views.GetProductsQueryTool')
+    @patch('products.views.SearchForm')
+    def test_search_products_good_template(self, MockSearchForm, MockGetProductsQueryTool):
+        MockSearchForm.return_value.is_valid.return_value = True
+        MockSearchForm.return_value.cleaned_data = {
+            'product_search': self.brand
+        }
+        MockGetProductsQueryTool.return_value.get_products_by_brand.return_value = Products.objects.all()
+        self.client.get(f'/products/brand/{self.brand}')
 
         self.assertTemplateUsed('products/search.html')
-        
-    def test_search_products_good_context(self):
-        response = self.client.get(f'/products/brand/{self.product}/')
+
+    @patch('products.views.GetProductsQueryTool')
+    @patch('products.views.SearchForm')
+    def test_search_products_good_context(self, MockSearchForm, MockGetProductsQueryTool):
+        MockSearchForm.return_value.is_valid.return_value = True
+        MockSearchForm.return_value.cleaned_data = {
+            'product_search': self.brand
+        }
+        MockGetProductsQueryTool.return_value.get_products_by_brand.return_value = Products.objects.all()
+        response = self.client.get(f'/products/brand/{self.brand}/')
+        MockGetProductsQueryTool.assert_called_with(self.brand)
         self.assertIn(
             'search_type',
             response.context
@@ -143,15 +176,30 @@ class CategoryViewTest(TestCase):
     """Testing category view"""
 
     def setUp(self):
-        self.product = 'some_category'
+        self.category = 'some_category'
 
-    def test_search_products_good_template(self):
-        self.client.get(f'/products/category/{self.product}')
+    @patch('products.views.GetProductsQueryTool')
+    @patch('products.views.SearchForm')
+    def test_search_products_good_template(self, MockSearchForm, MockGetProductsQueryTool):
+        MockSearchForm.return_value.is_valid.return_value = True
+        MockSearchForm.return_value.cleaned_data = {
+            'product_search': self.category
+        }
+        MockGetProductsQueryTool.return_value.get_products_by_category.return_value = Products.objects.all()
+        self.client.get(f'/products/category/{self.category}')
 
         self.assertTemplateUsed('products/search.html')
-        
-    def test_search_products_good_context(self):
-        response = self.client.get(f'/products/category/{self.product}/')
+
+    @patch('products.views.GetProductsQueryTool')
+    @patch('products.views.SearchForm')
+    def test_search_products_good_context(self, MockSearchForm, MockGetProductsQueryTool):
+        MockSearchForm.return_value.is_valid.return_value = True
+        MockSearchForm.return_value.cleaned_data = {
+            'product_search': self.category
+        }
+        MockGetProductsQueryTool.return_value.get_products_by_category.return_value = Products.objects.all()
+        response = self.client.get(f'/products/category/{self.category}/')
+        MockGetProductsQueryTool.assert_called_with(self.category)
         self.assertIn(
             'search_type',
             response.context
@@ -166,15 +214,30 @@ class StoreViewTest(TestCase):
     """Testing store view"""
 
     def setUp(self):
-        self.product = 'some_store'
+        self.store = 'some_store'
 
-    def test_search_products_good_template(self):
-        self.client.get(f'/products/store/{self.product}')
+    @patch('products.views.GetProductsQueryTool')
+    @patch('products.views.SearchForm')
+    def test_search_products_good_template(self, MockSearchForm, MockGetProductsQueryTool):
+        MockSearchForm.return_value.is_valid.return_value = True
+        MockSearchForm.return_value.cleaned_data = {
+            'product_search': self.store
+        }
+        MockGetProductsQueryTool.return_value.get_products_by_store.return_value = Products.objects.all()
+        self.client.get(f'/products/store/{self.store}')
 
         self.assertTemplateUsed('products/search.html')
-        
-    def test_search_products_good_context(self):
-        response = self.client.get(f'/products/store/{self.product}/')
+
+    @patch('products.views.GetProductsQueryTool')
+    @patch('products.views.SearchForm')
+    def test_search_products_good_context(self, MockSearchForm, MockGetProductsQueryTool):
+        MockSearchForm.return_value.is_valid.return_value = True
+        MockSearchForm.return_value.cleaned_data = {
+            'product_search': self.store
+        }
+        MockGetProductsQueryTool.return_value.get_products_by_store.return_value = Products.objects.all()
+        response = self.client.get(f'/products/store/{self.store}/')
+        MockGetProductsQueryTool.assert_called_once_with(self.store)
         self.assertIn(
             'search_type',
             response.context
@@ -197,11 +260,11 @@ class ProductViewTest(TestCase):
             'password': 'admin'
         }
         self.attrs = {
-            'return_value.check.return_value': object(),
-            'return_value.get_brands.return_value': [str(), list()],
-            'return_value.get_stores.return_value': list(),
+            'return_value.product': object(),
+            'return_value.get_brands.return_value': [Products.objects.first(), Products.objects.all()],
+            'return_value.get_stores.return_value': Products.objects.all(),
             'return_value.get_categories.return_value': dict(),
-            'return_value.get_alternatives.return_value': list(),
+            'return_value.get_alternatives.return_value': Products.objects.all(),
         }
 
     @patch('products.views.CheckProduct')
@@ -228,9 +291,11 @@ class ProductViewTest(TestCase):
             object
         )
 
+    @patch('products.views.UserProducts')
     @patch('products.views.CheckProduct')
-    def test_search_product_good_context_user_connected(self, MockCheckProduct):
+    def test_search_product_good_context_user_connected(self, MockCheckProduct, MockUserProducts):
         MockCheckProduct.configure_mock(**self.attrs)
+        MockUserProducts.return_value.get_user_products.return_value = Products.objects.all()
         self.client.login(**self.user)
         response = self.client.get(f'/products/product/{self.code}/')
         self.assertIn(
@@ -258,7 +323,7 @@ class UserProductsTest(TestCase):
             'password': 'admin'
         }
         self.attrs = {
-            'return_value.get_user_products.return_value': list(),
+            'return_value.get_user_products.return_value': Products.objects.all(),
         }
 
     def test_search_user_products_user_not_connected(self):
@@ -287,9 +352,10 @@ class UserProductsTest(TestCase):
             'products',
             response.context
         )
-        self.assertIsInstance(
+        self.assertQuerysetEqual(
             response.context['products'],
-            list
+            Products.objects.all(),
+            transform=lambda x: x
         )
 
 class SaveViewTest(TestCase):

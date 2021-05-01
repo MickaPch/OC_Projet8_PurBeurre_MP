@@ -77,7 +77,7 @@ class MySeleniumTests(StaticLiveServerTestCase):
         self.get_home()
         self.product_search(
             'searchbar',
-            'test',
+            'no_product',
             'Aucun produit'
         )
 
@@ -89,7 +89,7 @@ class MySeleniumTests(StaticLiveServerTestCase):
         self.get_home()
         self.product_search(
             'home_product_search',
-            'test',
+            'no_product',
             'Aucun produit'
         )
 
@@ -256,6 +256,7 @@ class MySeleniumTests(StaticLiveServerTestCase):
         """
         self.get_home()
         self.connect_user()
+
         # Click on user *my_products* and check no products registered
         element = self.selenium.find_element_by_id(
             'user_products'
@@ -272,17 +273,18 @@ class MySeleniumTests(StaticLiveServerTestCase):
             'Un seul produit'
         )
         self.get_product_page()
+
         # Page down to able click on save product
         time.sleep(1)
-        form_element = self.selenium.find_element_by_id('searchbar')
-        search_elmt = form_element.find_element_by_name('product_search')
-        search_elmt.send_keys(Keys.PAGE_DOWN)
+        self.selenium.execute_script("window.scrollTo(0, 400)")
+
         # Select save product & click it
         time.sleep(1)
         element = self.selenium.find_elements_by_class_name(
             'save-product'
         )
         element[0].click()
+
         # Click on user *my_products* and check product is registered
         time.sleep(1)
         self.get_home()

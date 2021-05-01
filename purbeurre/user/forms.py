@@ -142,7 +142,7 @@ class NewForm(forms.Form):
     )
 
     def clean(self):
-        cleaned_data = super(NewForm, self).clean()
+        cleaned_data = super().clean()
         pwd = cleaned_data.get("pwd")
         pwd_confirm = cleaned_data.get("pwd_confirm")
 
