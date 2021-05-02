@@ -175,3 +175,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_PORT = 1025
 
 INTERNAL_IPS = ['127.0.0.1',]
+
+# Configure Django App for Heroku.
+import django_heroku
+django_heroku.settings(locals())
