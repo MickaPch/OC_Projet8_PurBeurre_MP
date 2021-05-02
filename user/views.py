@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.views.generic import TemplateView
 from django.views.generic.base import ContextMixin
 from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 from .forms import ConnectionForm, NewForm
 from .models import User
@@ -154,6 +155,7 @@ class NewAccountView(TemplateView):
 
         return JsonResponse(data)
 
+@method_decorator(csrf_exempt, name="dispatch")
 class CheckLoginView(TemplateView):
     """
     Login check :
@@ -162,7 +164,6 @@ class CheckLoginView(TemplateView):
     """
     template = '/'
 
-    @csrf_exempt
     def post(self, request, **kwargs):
         """Login user from HTML form"""
         user_login = request.POST.get("user_login")
@@ -176,6 +177,7 @@ class CheckLoginView(TemplateView):
             except ValidationError:
                 return HttpResponse('Incorrect login format')
 
+@method_decorator(csrf_exempt, name="dispatch")
 class CheckEmailView(TemplateView):
     """
     Email check :
@@ -184,7 +186,6 @@ class CheckEmailView(TemplateView):
     """
     template = '/'
 
-    @csrf_exempt
     def post(self, request, **kwargs):
         """Retrieve email from HTML form"""
         email = request.POST.get('email')
@@ -206,6 +207,7 @@ class CheckEmailView(TemplateView):
             return False
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class CheckPwdView(TemplateView):
     """
     Pwd check :
@@ -219,7 +221,6 @@ class CheckPwdView(TemplateView):
     """
     template = '/'
 
-    @csrf_exempt
     def post(self, request, **kwargs):
         """Retrieve password from HTML form"""
         pwd = request.POST.get("pwd")
