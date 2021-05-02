@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 import environ
 import django_heroku
-# import dj_database_url
+import dj_database_url
 
 from pathlib import Path
 import os
