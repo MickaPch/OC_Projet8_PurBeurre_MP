@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 import environ
+import django_heroku
 
 from pathlib import Path
 import os
@@ -177,5 +178,4 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 INTERNAL_IPS = ['127.0.0.1',]
 
 # Configure Django App for Heroku.
-import django_heroku
 django_heroku.settings(locals())
